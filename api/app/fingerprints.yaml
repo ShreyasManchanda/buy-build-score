@@ -1,0 +1,57 @@
+# Technology fingerprints. Each pattern is a case-insensitive regex run against raw HTML
+# (script src, link href, inline snippets, meta generator). Categories drive upside signals.
+# `version` (optional) is a regex whose first capture group is the version string.
+booking:
+  - { name: Calendly, pattern: "calendly\\.com" }
+  - { name: Jobber, pattern: "getjobber\\.com|clienthub\\.getjobber|jobber\\.com/(work_request|clienthub)" }
+  - { name: Housecall Pro, pattern: "housecallpro\\.com" }
+  - { name: ServiceTitan, pattern: "servicetitan\\.com|st-widget|scheduler\\.servicetitan" }
+  - { name: Square Appointments, pattern: "squareup\\.com/appointments|square\\.site/book" }
+  - { name: Acuity, pattern: "acuityscheduling\\.com" }
+  - { name: Setmore, pattern: "setmore\\.com" }
+  - { name: Booksy, pattern: "booksy\\.com" }
+  - { name: Vagaro, pattern: "vagaro\\.com" }
+  - { name: Mindbody, pattern: "mindbodyonline\\.com|healcode" }
+  - { name: Zocdoc, pattern: "zocdoc\\.com" }
+  - { name: OpenTable, pattern: "opentable\\.com/widget|otstatic" }
+  - { name: Resy, pattern: "widgets\\.resy\\.com" }
+  - { name: SimplyBook, pattern: "simplybook\\.me" }
+  - { name: Schedulicity, pattern: "schedulicity\\.com" }
+chat:
+  - { name: Intercom, pattern: "widget\\.intercom\\.io|intercomcdn\\.com" }
+  - { name: Drift, pattern: "js\\.driftt\\.com|drift\\.com/include" }
+  - { name: Tidio, pattern: "code\\.tidio\\.co" }
+  - { name: tawk.to, pattern: "embed\\.tawk\\.to" }
+  - { name: LiveChat, pattern: "cdn\\.livechatinc\\.com" }
+  - { name: HubSpot Chat, pattern: "js\\.usemessages\\.com|js\\.hs-scripts\\.com" }
+  - { name: Zendesk, pattern: "static\\.zdassets\\.com|zopim" }
+  - { name: Crisp, pattern: "client\\.crisp\\.chat" }
+  - { name: Olark, pattern: "static\\.olark\\.com" }
+  - { name: Podium, pattern: "connect\\.podium\\.com|podium-webchat" }
+  - { name: Birdeye, pattern: "birdeye\\.com/(embed|widget)" }
+analytics:
+  - { name: GA4, pattern: "googletagmanager\\.com/gtag/js\\?id=G-" }
+  - { name: Google Tag Manager, pattern: "googletagmanager\\.com/gtm\\.js|GTM-[A-Z0-9]+" }
+  - { name: Universal Analytics, pattern: "google-analytics\\.com/analytics\\.js|UA-\\d{4,}-\\d+" }
+  - { name: Meta Pixel, pattern: "connect\\.facebook\\.net/[^\"']*/fbevents\\.js" }
+  - { name: Hotjar, pattern: "static\\.hotjar\\.com" }
+  - { name: Microsoft Clarity, pattern: "clarity\\.ms/tag" }
+  - { name: Plausible, pattern: "plausible\\.io/js" }
+cms:   # informational; shown in the drawer, not scored except WordPress version
+  - { name: WordPress, pattern: "wp-content|wp-includes", version: "<meta[^>]+generator[^>]+WordPress\\s*([\\d.]+)" }
+  - { name: Wix, pattern: "static\\.wixstatic\\.com|wix\\.com" }
+  - { name: Squarespace, pattern: "static1\\.squarespace\\.com|squarespace\\.com" }
+  - { name: GoDaddy Builder, pattern: "img1\\.wsimg\\.com" }
+  - { name: Weebly, pattern: "editmysite\\.com|weebly\\.com" }
+  - { name: Webflow, pattern: "website-files\\.com|webflow\\.com" }
+  - { name: Shopify, pattern: "cdn\\.shopify\\.com" }
+  - { name: Joomla, pattern: "<meta[^>]+generator[^>]+Joomla" }
+  - { name: Drupal, pattern: "Drupal\\.settings|<meta[^>]+generator[^>]+Drupal" }
+  - { name: Duda, pattern: "multiscreensite\\.com|dudamobile" }
+legacy:
+  - { name: Old jQuery, pattern: "jquery[.-]?(1|2)\\.\\d+(\\.\\d+)?(\\.min)?\\.js", version: "jquery[.-]?(\\d+\\.\\d+(?:\\.\\d+)?)" }
+  - { name: Flash, pattern: "\\.swf[\"'?]|shockwave-flash|x-shockwave" }
+  - { name: Frames, pattern: "<frameset|<frame\\s" }
+  - { name: Old Bootstrap, pattern: "bootstrap[.-]?(2|3)\\.\\d+(\\.\\d+)?(\\.min)?\\.(css|js)" }
+  - { name: Marquee/Blink, pattern: "<marquee|<blink" }
+  # Table layout heuristic is in code: >5 <table> tags and no <main>/<section>/<article>.

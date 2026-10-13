@@ -1,0 +1,139 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens (SPEC.md "Design tokens"). The spec tokens are the source of truth;
+ * shadcn's semantic variables are aliased onto them so every primitive inherits the palette.
+ */
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f3;
+  --text: #18181b;
+  --muted: #71717a;
+  --line: #e7e5e4;
+  --accent: #4f46e5;
+  --accent-soft: color-mix(in oklab, #4f46e5 10%, transparent);
+  --tier-a: #059669;
+  --tier-b: #d97706;
+  --tier-c: #71717a;
+  --warn: #b45309;
+  --danger: #dc2626;
+
+  /* shadcn aliases */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted-foreground: var(--muted);
+  --accent-foreground: var(--text);
+  --destructive: var(--danger);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent);
+  --radius: 0.5rem; /* 8 px */
+}
+
+.dark {
+  --bg: #0c0c0e;
+  --surface: #16161a;
+  --surface-2: #1e1e23;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --line: #2a2a30;
+  --accent: #818cf8;
+  --accent-soft: color-mix(in oklab, #818cf8 14%, transparent);
+  --tier-a: #34d399;
+  --tier-b: #fbbf24;
+  --tier-c: #a1a1aa;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --primary-foreground: #0c0c0e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-brand: var(--accent);
+  --color-brand-soft: var(--accent-soft);
+  --color-tier-a: var(--tier-a);
+  --color-tier-b: var(--tier-b);
+  --color-tier-c: var(--tier-c);
+  --color-warn: var(--warn);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  --animate-row-in: row-in 150ms ease-out both;
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  .num {
+    font-family: var(--font-geist-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* Leaflet sits inside a drawer; keep its controls under our overlays. */
+.leaflet-pane, .leaflet-control { z-index: 1 !important; }
+.leaflet-container { font-family: var(--font-geist-sans); background: var(--surface-2); }

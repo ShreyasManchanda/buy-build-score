@@ -1,0 +1,43 @@
+# Industry keyword -> OpenStreetMap tags for Overpass discovery.
+# Match the user's industry text against `aliases` (case-insensitive, substring).
+# If nothing matches, fall back to a name regex built from the user's keyword, requiring a website tag.
+#
+# Overpass query template (one request, cached 24 h; send User-Agent from CRAWL_USER_AGENT):
+#   [out:json][timeout:25];
+#   (
+#     nwr[{tag}](around:{radius_m},{lat},{lng});            # one line per tag
+#     nwr["name"~"{name_regex}",i]["website"](around:{radius_m},{lat},{lng});
+#   );
+#   out center tags {limit};
+#
+# Tags read from results: name, website | contact:website | url, phone | contact:phone,
+# addr:housenumber, addr:street, addr:city, addr:state, addr:postcode, start_date (-> founded year, extractor "osm"),
+# opening_hours, email | contact:email. Rows without name are dropped; rows without a website are kept but
+# marked crawl_status = no_site.
+endpoint: "https://overpass-api.de/api/interpreter"
+fallback_endpoints: ["https://overpass.private.coffee/api/interpreter"]
+industries:
+  hvac:          { aliases: ["hvac", "heating", "air conditioning", "furnace", "ac repair"], tags: ['"craft"="hvac"'], name_regex: "hvac|heating|air ?condition|furnace|mechanical" }
+  plumbing:      { aliases: ["plumb"], tags: ['"craft"="plumber"'], name_regex: "plumb" }
+  electrical:    { aliases: ["electric"], tags: ['"craft"="electrician"'], name_regex: "electric" }
+  roofing:       { aliases: ["roof"], tags: ['"craft"="roofer"'], name_regex: "roof" }
+  landscaping:   { aliases: ["landscap", "lawn", "garden"], tags: ['"craft"="gardener"', '"shop"="garden_centre"'], name_regex: "landscap|lawn|garden|tree service" }
+  auto_repair:   { aliases: ["auto repair", "mechanic", "car repair", "auto body", "collision"], tags: ['"shop"="car_repair"'], name_regex: "auto|automotive|collision|body shop|tire|mechanic" }
+  dental:        { aliases: ["dent"], tags: ['"amenity"="dentist"', '"healthcare"="dentist"'], name_regex: "dental|dentist|orthodont" }
+  veterinary:    { aliases: ["vet", "animal hospital"], tags: ['"amenity"="veterinary"'], name_regex: "veterinar|animal hospital|pet clinic" }
+  accounting:    { aliases: ["account", "cpa", "bookkeep", "tax"], tags: ['"office"="accountant"', '"office"="tax_advisor"'], name_regex: "cpa|accounting|bookkeeping|tax" }
+  legal:         { aliases: ["law", "attorney", "legal"], tags: ['"office"="lawyer"'], name_regex: "law|attorney|legal" }
+  insurance:     { aliases: ["insurance"], tags: ['"office"="insurance"'], name_regex: "insurance" }
+  printing:      { aliases: ["print", "sign"], tags: ['"craft"="printer"', '"shop"="copyshop"'], name_regex: "print|sign|graphics" }
+  cleaning:      { aliases: ["clean", "janitor", "dry clean"], tags: ['"shop"="dry_cleaning"', '"shop"="laundry"'], name_regex: "clean|janitor|maid" }
+  pest_control:  { aliases: ["pest", "extermin"], tags: ['"craft"="pest_control"'], name_regex: "pest|extermin|termite" }
+  carpentry:     { aliases: ["carpent", "cabinet", "woodwork"], tags: ['"craft"="carpenter"', '"craft"="cabinet_maker"'], name_regex: "carpent|cabinet|woodwork|millwork" }
+  restaurant:    { aliases: ["restaurant", "diner", "cafe"], tags: ['"amenity"="restaurant"', '"amenity"="cafe"'], name_regex: "restaurant|grill|diner|cafe|kitchen" }
+  bakery:        { aliases: ["bakery", "bake"], tags: ['"shop"="bakery"'], name_regex: "bakery|bake" }
+  hardware:      { aliases: ["hardware"], tags: ['"shop"="hardware"', '"shop"="doityourself"'], name_regex: "hardware|lumber" }
+  florist:       { aliases: ["florist", "flower"], tags: ['"shop"="florist"'], name_regex: "florist|flower" }
+  funeral:       { aliases: ["funeral", "mortuary"], tags: ['"shop"="funeral_directors"', '"amenity"="funeral_hall"'], name_regex: "funeral|mortuary|memorial" }
+limits:
+  default_limit: 60
+  max_limit: 180
+  default_radius_km: 40

@@ -1,0 +1,112 @@
+# Buy & Build Score — scoring configuration
+# All thresholds live here so they can be tuned without code changes.
+# Points are multiplied by evidence confidence. Missing signals score 0 and lower coverage.
+version: 1
+
+tiers:
+  A: 70          # composite >= 70
+  B: 50          # 50..69 ; below 50 = C
+guardrails:
+  durability_floor: 30      # if durability < 30, tier capped at B
+  min_coverage_for_A: 0.40  # coverage < 0.40 -> "thin data" badge, tier capped at B
+
+confidence:
+  rule: 0.9
+  places: 0.95
+  osm: 0.85
+  http: 0.95
+  llm: 0.7
+  whois: 0.4
+
+presets:            # weights for the composite (normalized by their sum)
+  searcher: { durability: 40, succession: 40, upside: 20 }
+  sdr:      { durability: 25, succession: 10, upside: 65 }
+  caprae:   { durability: 35, succession: 30, upside: 35 }
+default_preset: searcher
+
+dimensions:
+  durability:
+    max: 100
+    signals:
+      years_in_business:
+        source: [jsonld_foundingDate, regex_since, osm_start_date, llm, whois]
+        bands:            # years -> points (first match wins)
+          - { min: 25, points: 35 }
+          - { min: 15, points: 28 }
+          - { min: 8,  points: 18 }
+          - { min: 3,  points: 8 }
+          - { min: 0,  points: 0 }
+      review_volume:      # Places userRatingCount (Places mode only)
+        requires: places
+        bands:
+          - { min: 200, points: 25 }
+          - { min: 50,  points: 18 }
+          - { min: 15,  points: 10 }
+          - { min: 0,   points: 3 }
+      rating:             # Places rating (Places mode only)
+        requires: places
+        bands:
+          - { min: 4.5, points: 15 }
+          - { min: 4.0, points: 10 }
+          - { min: 3.5, points: 4 }
+          - { min: 0,   points: 0 }
+      recent_activity:    # days since newest Places review (Places mode only)
+        requires: places
+        bands_max_days:
+          - { max: 90,  points: 10 }
+          - { max: 365, points: 5 }
+      operating_fixed_location:
+        points: 15
+        rule_places: "businessStatus == OPERATIONAL and street address present"
+        rule_osm: "street address present and website responds 2xx/3xx"
+    # OSM-only mode: review_volume, rating, recent_activity unavailable.
+    # Re-normalize: durability = round(raw / 50 * 100), label "durability (site-only)".
+    osm_mode_max_raw: 50
+
+  succession:
+    max: 100
+    signals:
+      long_tenure:
+        bands:
+          - { min: 25, points: 25 }
+          - { min: 15, points: 15 }
+      founder_family_run:
+        points: 20
+        patterns: ["family[- ]owned", "family[- ]operated", "second[- ]generation", "third[- ]generation", "& sons", "and sons", "& daughters", "father and son"]
+        also: "owner surname appears in business name"
+      single_leader:
+        points: 15
+        rule: "exactly one person named on site and no team/leadership page"
+      stale_copyright:
+        bands_years_old:      # current_year - copyright_year
+          - { min: 3, points: 15 }
+          - { min: 2, points: 8 }
+      not_hiring:
+        points: 10
+        rule: "no careers/jobs page and no 'we're hiring|join our team|now hiring' text"
+      exit_language:
+        points: 15
+        patterns: ["retir(e|ing|ement)", "for sale", "succession", "new ownership", "ownership transition", "looking for a buyer", "sell(ing)? the business"]
+        window_chars: 100
+        near: ["owner", "business", "company"]
+        negations: ["not for sale", "no plans to retire"]
+
+  upside:          # points awarded for ABSENCE of each capability
+    max: 100
+    signals:
+      no_booking_or_quote: { points: 20, fingerprint_category: booking, also_form_keywords: ["quote", "estimate", "book", "schedule", "appointment"] }
+      slow_site:
+        pagespeed_bands:     # mobile performance score (P1, needs PAGESPEED_API_KEY)
+          - { max: 49, points: 15 }
+          - { max: 79, points: 8 }
+        fallback: { ttfb_ms_over: 1500, page_bytes_over: 3000000, points: 15 }
+      no_live_chat:   { points: 10, fingerprint_category: chat }
+      no_https:       { points: 10 }
+      not_mobile_ready: { points: 10, rule: "no <meta name=viewport>" }
+      outdated_stack: { points: 10, fingerprint_category: legacy, also: "WordPress generator < 6.0" }
+      no_analytics:   { points: 10, fingerprint_category: analytics }
+      phone_only_cta: { points: 10, rule: "tel: links present, no <form>, no mailto:" }
+      no_social_links: { points: 5, domains: ["facebook.com", "instagram.com", "linkedin.com", "yelp.com", "x.com", "twitter.com", "nextdoor.com"] }
+
+coverage:
+  total_signals: 20   # durability 5 + succession 6 + upside 9 (OSM mode: 17)
