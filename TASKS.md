@@ -162,13 +162,13 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M6 — Export + validation (4:15–4:35)
 
-- [ ] Validation:
+- [x] Validation:
   - website status/HTTPS/TLS
   - company email (from `mailto:` or the contact page) via syntax plus an MX check (dnspython, 2 s timeout, cached 7 days)
   - phone via `phonenumbers` validity
   - **no SMTP probing**
-- [ ] `POST /api/v1/export/csv` with the columns from SPEC.md "Integrations", as UTF-8 with BOM.
-- [ ] P1 `POST /api/v1/export/hubspot` (only if `HUBSPOT_TOKEN` is set):
+- [x] `POST /api/v1/export/csv` with the columns from SPEC.md "Integrations", as UTF-8 with BOM.
+- [x] P1 `POST /api/v1/export/hubspot` (only if `HUBSPOT_TOKEN` is set):
   - ensure the property group and `bbs_*` properties exist
   - batch upsert on `domain` in batches of 100
   - on a "non-unique property domain" error, search by domain and update the oldest record by ID

@@ -225,3 +225,36 @@ async def test_unknown_run_stream_reports_error(pg: None) -> None:
     async with await _client() as c:
         r = await c.get("/api/v1/runs/00000000-0000-0000-0000-000000000000/stream")
     assert parse_sse(r.text) == [("error", {"message": "Run not found"})]
+
+
+async def test_demo_loads_idempotently_replays_and_exports(pg: None) -> None:
+    import csv
+    import io
+
+    async with await _client() as c:
+        r1 = await c.post("/api/v1/runs/demo")
+        r2 = await c.post("/api/v1/runs/demo")
+        assert r1.status_code == 200 and r1.json()["run_id"] == r2.json()["run_id"]
+        run_id = r1.json()["run_id"]
+        events = parse_sse((await c.get(f"/api/v1/runs/{run_id}/stream")).text)
+        leads = [d for n, d in events if n == "lead"]
+        assert len(leads) >= 30 and events[-1][0] == "done"
+        comps = [d["scores"]["composite"] for d in leads]
+        assert comps == sorted(comps, reverse=True)
+
+        r = await c.post(
+            "/api/v1/export/csv",
+            json={"run_id": run_id, "weights": {"durability": 25, "succession": 10, "upside": 65}},
+        )
+        assert r.status_code == 200 and r.headers["content-type"].startswith("text/csv")
+        assert r.content.startswith("\ufeff".encode())
+        rows = list(csv.reader(io.StringIO(r.content.decode("utf-8-sig"))))
+        assert rows[0][:3] == ["Company", "Website", "Phone"] and rows[0][-1] == "Run ID"
+        assert len(rows) - 1 == len(leads)
+        names = [row[0] for row in rows[1:]]
+        assert len(names) == len(set(zip(names, (row[1] for row in rows[1:]), strict=True)))  # no duplicates
+
+        only = await c.post("/api/v1/export/csv", json={"lead_ids": [leads[0]["id"]]})
+        assert len(list(csv.reader(io.StringIO(only.content.decode("utf-8-sig"))))) == 2
+        assert (await c.post("/api/v1/export/csv", json={})).status_code == 422
+        assert (await c.post("/api/v1/export/hubspot", json={"run_id": run_id})).status_code == 501
