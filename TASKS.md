@@ -129,13 +129,13 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M5 — UI (3:15–4:15)
 
-- [ ] `/` (thesis screen):
+- [x] `/` (thesis screen):
   - industry and location fields, radius, max results (20/40/60) with an "Expand" toggle
   - preset segmented control (Searcher, SDR, Caprae)
   - CSV drag-and-drop with a header-mapping preview
   - "Try the demo run" button
   - a "Find targets" primary button, disabled until industry and location are set
-- [ ] `/runs/[id]` (run screen):
+- [x] `/runs/[id]` (run screen):
   - **header:** progress header with stage labels and elapsed time
   - **left rail:**
     - tier chips with counts
@@ -145,20 +145,20 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
   - **table:** virtualized TanStack table with these columns: checkbox · tier badge (letter plus color) · company (name + domain) · composite (Geist Mono) · D/S/U mini-bars · founded · reviews (Places mode only) · top 2 evidence chips · contact icons
   - **streaming:** rows stream in with a 150 ms fade. Don't re-sort until the user interacts.
   - **sticky action bar:** Export CSV / Push to HubSpot / N selected
-- [ ] Lead drawer (480 px):
+- [x] Lead drawer (480 px):
   - header: name, tier, composite, address, Leaflet map pin, website, phone, owner with "found on /about" link
   - three collapsible dimension sections listing evidence rows: label · value · +points · confidence dot · ↗ source, with the snippet on hover
   - missing signals shown greyed as "not found"
   - keyboard: ↑/↓ moves between leads, E exports, Esc closes
-- [ ] `lib/score.ts`: client-side re-weighting matches the API composite to within ±1. Write a vitest for it.
-- [ ] States:
+- [x] `lib/score.ts`: client-side re-weighting matches the API composite to within ±1. Write a vitest for it.
+- [x] States:
   - empty
   - partial (amber icon with tooltip)
   - upstream warning banner
   - thin-data badge
   - "durability (site-only)" label in OSM mode
   - mobile (< 768 px): cards plus a full-screen drawer
-- [ ] Footer attribution: "© OpenStreetMap contributors". Add Google attribution when Places data is shown.
+- [x] Footer attribution: "© OpenStreetMap contributors". Add Google attribution when Places data is shown.
 
 ## M6 — Export + validation (4:15–4:35)
 
