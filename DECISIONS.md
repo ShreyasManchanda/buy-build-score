@@ -27,3 +27,14 @@ Ambiguities resolved during the build. One line each: what, why.
 - **Fuzzy-name dedup never merges two different known domains**, and ZIP+4 is normalised to ZIP5 before the postcode comparison.
 - **tldextract uses its bundled suffix snapshot** (`suffix_list_urls=()`), so serverless cold starts make no network call.
 - **OSM coverage is uneven by trade.** Live check, Columbus OH, 40 km: dental 60 found / 30 with sites, auto repair 60 / 23, landscaping 55 / 19, HVAC 15 / 9, plumbing 7 / 4. The demo run should use a well-mapped trade (dental or auto repair) unless a Places key is set.
+
+## M2 — Crawler
+
+- **Robots.txt status handling.** 200 → parse; 404/unreachable → no restrictions published; 401/403/5xx → treat as full disallow (conservative, RFC 9309 says 5xx means "assume complete disallow").
+- **Robots user-agent token** is `BuyBuildScoreBot` (product token of the full UA string), so site owners can target us specifically.
+- **Bot walls are respected, not bypassed.** A 403 homepage (e.g. Cloudflare) is `unreachable` with the HTTP status as the reason; no retries with a browser UA, no proxies.
+- **Bad TLS falls back to plain HTTP** to read the public page, and records `tls_ok=false` for the "No HTTPS / bad cert" upside signal. HTTP is never upgraded silently.
+- **Crawl cache stores slimmed HTML** (CSS, inline SVG, comments and base64 blobs stripped; ≤ 400 KB; zlib+base64) so extractors stay pure functions over HTML and a re-run within 7 days makes zero requests. Script tags are kept because fingerprints need them.
+- **Page buckets**: about/our-story/history → team/staff/leadership → contact → careers/jobs; one page per bucket, top 3, path matches beat anchor-text matches, shallow paths win.
+- **DNS-rebinding window accepted.** The SSRF guard resolves and checks every hop, but httpx resolves again on connect; closing that TOCTOU gap needs a pinned-IP transport, noted as production hardening.
+- **JS-rendered sites** are flagged (`js_rendered`) but not re-fetched with Playwright (P2 per SPEC; doesn't fit the free function).

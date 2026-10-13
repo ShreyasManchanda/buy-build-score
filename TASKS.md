@@ -56,16 +56,16 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M2 — Crawler (1:00–1:30)
 
-- [ ] `pipeline/crawl.py`, using httpx.AsyncClient with HTTP/2:
+- [x] `pipeline/crawl.py`, using httpx.AsyncClient with HTTP/2:
   - global semaphore `CRAWL_CONCURRENCY` (20); per-domain 1 req/s
   - timeouts: connect 5 s, read 10 s, 25 s total per domain
   - 2 retries with backoff on 429/5xx/timeouts; honor `Retry-After`
   - only `text/html`; max body 3 MB
-- [ ] robots.txt via `urllib.robotparser`, cached 24 h. A fully disallowed site gets `crawl_status = blocked_robots`.
-- [ ] Page selection: homepage plus up to 3 internal links matching `about|our-story|history|team|staff|contact|careers|jobs` in the path or anchor text.
-- [ ] SSRF guard: resolve the host and reject private/loopback/link-local/metadata IPs. Re-check every redirect hop. Allow only http(s).
-- [ ] Cache cleaned pages under `crawl:{domain}` for 7 days. Also record TTFB, total bytes, final URL scheme, and TLS ok.
-- [ ] Tests (with respx):
+- [x] robots.txt via `urllib.robotparser`, cached 24 h. A fully disallowed site gets `crawl_status = blocked_robots`.
+- [x] Page selection: homepage plus up to 3 internal links matching `about|our-story|history|team|staff|contact|careers|jobs` in the path or anchor text.
+- [x] SSRF guard: resolve the host and reject private/loopback/link-local/metadata IPs. Re-check every redirect hop. Allow only http(s).
+- [x] Cache cleaned pages under `crawl:{domain}` for 7 days. Also record TTFB, total bytes, final URL scheme, and TLS ok.
+- [x] Tests (with respx):
   - robots disallow honored
   - SSRF to 127.0.0.1 and 169.254.169.254 blocked
   - redirect to a private IP blocked
