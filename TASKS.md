@@ -32,25 +32,25 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M1 — Discovery + dedup (0:30–1:00)
 
-- [ ] `integrations/nominatim.py`: geocode a location string. Rules:
+- [x] `integrations/nominatim.py`: geocode a location string. Rules:
   - 1 req/s
   - User-Agent from `CRAWL_USER_AGENT`
   - cache 30 days under `geo:`
   - no autocomplete
-- [ ] `integrations/osm.py`:
+- [x] `integrations/osm.py`:
   - build the Overpass query from `osm_tags.yaml`
   - parse into `CompanyIn` (name, website, phone, address, lat/lng, osm_id, start_date)
   - cache 24 h
   - on 429/504: try the fallback endpoint, then wait 30 s once
-- [ ] `integrations/places.py` (used only when `GOOGLE_PLACES_API_KEY` is set):
+- [x] `integrations/places.py` (used only when `GOOGLE_PLACES_API_KEY` is set):
   - Text Search (New), `pageSize` 20, up to 3 pages
   - field mask: `places.id,places.displayName,places.formattedAddress,places.location,places.websiteUri,places.nationalPhoneNumber,places.rating,places.userRatingCount,places.businessStatus,places.reviews`
   - On quota or other errors, fall back to OSM and emit a `warning` event.
-- [ ] `pipeline/dedup.py`:
+- [x] `pipeline/dedup.py`:
   - normalize domain (tldextract), phone (E.164 via phonenumbers), and name (lowercase, strip LLC/Inc/Co/Corp/&/punctuation)
   - match order: domain → phone → `rapidfuzz.fuzz.token_set_ratio ≥ 90` + same postcode
   - merge keeps the most complete record and records `merged_from`
-- [ ] Tests:
+- [x] Tests:
   - Overpass response fixture → parsed companies
   - 25-row CSV with 6 planted duplicates → 19 unique
 

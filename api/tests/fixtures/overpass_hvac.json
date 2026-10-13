@@ -1,0 +1,42 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62",
+  "elements": [
+    {
+      "type": "node", "id": 1001, "lat": 39.9612, "lon": -82.9988,
+      "tags": {
+        "craft": "hvac", "name": "Buckeye Heating & Cooling",
+        "website": "https://www.buckeyehvac.com/", "phone": "+1 614-555-0101",
+        "addr:housenumber": "1450", "addr:street": "Parsons Avenue", "addr:city": "Columbus",
+        "addr:state": "OH", "addr:postcode": "43206", "start_date": "1984"
+      }
+    },
+    {
+      "type": "way", "id": 2002, "center": {"lat": 40.0992, "lon": -83.1141},
+      "tags": {
+        "name": "Dublin Air Conditioning & Furnace", "contact:website": "dublinair.com",
+        "contact:phone": "(614) 555-0122", "addr:city": "Dublin", "addr:state": "OH",
+        "addr:postcode": "43017", "start_date": "1979-04"
+      }
+    },
+    {
+      "type": "node", "id": 1003, "lat": 39.98, "lon": -83.01,
+      "tags": {"craft": "hvac", "name": "Short North Heating", "phone": "614-555-0123"}
+    },
+    {
+      "type": "node", "id": 1004, "lat": 39.97, "lon": -83.02,
+      "tags": {"craft": "hvac", "website": "https://nameless.example.com"}
+    },
+    {
+      "type": "node", "id": 1001, "lat": 39.9612, "lon": -82.9988,
+      "tags": {"craft": "hvac", "name": "Buckeye Heating & Cooling", "website": "https://www.buckeyehvac.com/"}
+    },
+    {
+      "type": "relation", "id": 3005, "center": {"lat": 39.95, "lon": -82.9},
+      "tags": {
+        "name": "Kessler & Sons Mechanical", "url": "kesslermechanical.com; https://facebook.com/kessler",
+        "email": "info@kesslermechanical.com", "start_date": "early 1990s"
+      }
+    }
+  ]
+}

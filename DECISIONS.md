@@ -17,3 +17,13 @@ Ambiguities resolved during the build. One line each: what, why.
 - **Mini-bars are CSS, not Recharts.** Three 0–100 bars don't need a chart library; saves ~90 KB.
 - **`.claude/` and `skills-lock.json` are git-ignored.** They're local agent tooling, not part of the submission.
 - **Local dev DB.** `docker-compose.yml` provides Postgres 17, but this machine is memory-constrained; Neon (the production DB) also works for local dev since every key except `DATABASE_URL` is optional.
+
+## M1 — Discovery + dedup
+
+- **Overpass mirror added** (`osm_tags.yaml` `fallback_endpoints`): `maps.mail.ru` first, then `private.coffee`. On 2026-10-13 the main instance returned 504 for trivial queries and private.coffee timed out; mail.ru answered. Per-request timeout 28 s (server-side `[timeout:25]` + transfer).
+- **Chains are dropped before dedup** (`discover.drop_chains`): OSM `brand`/`brand:wikidata`, store-locator subdomains (`locations.`, `store.`…), or one domain shared by 3+ locations. Franchises aren't owner-operated, so they're noise for a searcher. The run reports how many were dropped.
+- **Name-regex matches with a different category tag are dropped** (an `office=insurance` called "…Auto…", an `amenity=bar` called "…Mechanical"). Rows found by tag rank before name-only rows; rows with a website rank first.
+- **Social/directory links aren't websites.** facebook/yelp/linkedin/etc. URLs normalise to no domain, so the business is `no_site` rather than a crawl of Facebook.
+- **Fuzzy-name dedup never merges two different known domains**, and ZIP+4 is normalised to ZIP5 before the postcode comparison.
+- **tldextract uses its bundled suffix snapshot** (`suffix_list_urls=()`), so serverless cold starts make no network call.
+- **OSM coverage is uneven by trade.** Live check, Columbus OH, 40 km: dental 60 found / 30 with sites, auto repair 60 / 23, landscaping 55 / 19, HVAC 15 / 9, plumbing 7 / 4. The demo run should use a well-mapped trade (dental or auto repair) unless a Places key is set.
