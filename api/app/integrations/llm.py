@@ -167,7 +167,7 @@ async def _gemini(items: list[LlmRequest]) -> tuple[str, list[dict[str, Any]]]:
                     system_instruction=system_prompt(), temperature=0, response_mime_type="application/json"
                 ),
             ),
-            timeout=40,
+            timeout=15,  # flash answers in 2-5 s; a slow Gemini falls through to Groq quickly
         )
     except errors.APIError as e:
         raise LlmUnavailable(f"gemini {e.code}") from e

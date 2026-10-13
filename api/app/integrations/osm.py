@@ -144,27 +144,61 @@ async def _post(endpoint: str, query: str) -> httpx.Response:
         return await c.post(endpoint, data={"data": query})
 
 
+HEDGE_S = 3.0  # start the next mirror if the previous one hasn't answered within this
+RETRY_WAIT_S = 10.0
+DISCOVERY_BUDGET_S = 60.0
+
+
+async def _attempt(ep: str, query: str, delay: float, errors: list[str]) -> dict[str, Any] | None:
+    await asyncio.sleep(delay)
+    try:
+        r = await _post(ep, query)
+    except httpx.HTTPError as e:
+        errors.append(f"{httpx.URL(ep).host}: {e.__class__.__name__}")
+        return None
+    if r.status_code != 200:
+        errors.append(f"{httpx.URL(ep).host}: HTTP {r.status_code}")
+        return None
+    data: dict[str, Any] = r.json()
+    return data
+
+
+async def _hedged(endpoints: list[str], query: str, errors: list[str]) -> dict[str, Any] | None:
+    """Primary first; each mirror joins HEDGE_S later. First success wins, the rest are cancelled.
+    One query hits at most len(endpoints) servers, and only when the earlier ones are slow or failing."""
+    tasks = [asyncio.create_task(_attempt(ep, query, i * HEDGE_S, errors)) for i, ep in enumerate(endpoints)]
+    try:
+        for fut in asyncio.as_completed(tasks):
+            result = await fut
+            if result is not None:
+                return result
+        return None
+    finally:
+        for t in tasks:
+            t.cancel()
+
+
 async def fetch(query: str) -> dict[str, Any]:
     cfg = configs.osm_tags()
     endpoints = [cfg["endpoint"], *cfg.get("fallback_endpoints", [])]
-    last: str = ""
-    for attempt in range(2):
-        for ep in endpoints:
-            try:
-                r = await _post(ep, query)
-            except httpx.HTTPError as e:
-                last = f"{ep}: {e.__class__.__name__}"
-                continue
-            if r.status_code == 200:
-                data: dict[str, Any] = r.json()
-                return data
-            last = f"{ep}: HTTP {r.status_code}"
-            if r.status_code not in RETRY_STATUS:
-                break
-        if attempt == 0:
-            log.warning("Overpass busy (%s); waiting 30 s once", last)
-            await asyncio.sleep(30)
-    raise OverpassError(f"OpenStreetMap Overpass unavailable ({last})")
+    errors: list[str] = []
+
+    async def go() -> dict[str, Any]:
+        for attempt in range(2):
+            result = await _hedged(endpoints, query, errors)
+            if result is not None:
+                return result
+            if attempt == 0:
+                log.warning("Overpass busy (%s); retrying once in %.0f s", "; ".join(errors), RETRY_WAIT_S)
+                await asyncio.sleep(RETRY_WAIT_S)
+        raise OverpassError(
+            f"OpenStreetMap Overpass is busy right now ({'; '.join(errors[-3:])}). Try again shortly."
+        )
+
+    try:
+        return await asyncio.wait_for(go(), DISCOVERY_BUDGET_S)
+    except TimeoutError as e:
+        raise OverpassError("OpenStreetMap Overpass didn't answer within 60 s. Try again shortly.") from e
 
 
 async def discover(

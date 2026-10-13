@@ -61,7 +61,8 @@ def test_overpass_query_falls_back_to_keyword_regex() -> None:
 
 
 @respx.mock
-async def test_overpass_falls_back_through_mirrors() -> None:
+async def test_overpass_falls_back_through_mirrors(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(osm, "HEDGE_S", 0.01)
     respx.post("https://overpass-api.de/api/interpreter").mock(return_value=httpx.Response(504))
     respx.post("https://maps.mail.ru/osm/tools/overpass/api/interpreter").mock(
         side_effect=httpx.ReadTimeout("slow")
@@ -73,6 +74,31 @@ async def test_overpass_falls_back_through_mirrors() -> None:
     out = await osm.discover("hvac", GEO, 40, 60)
     assert len(out) == 4 and last.called
     assert out[0].raw["matched_by"] == "tag"
+
+
+@respx.mock
+async def test_overpass_hedging_returns_first_success_and_cancels_rest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(osm, "HEDGE_S", 0.2)
+    payload = json.loads((FIXTURES / "overpass_hvac.json").read_text())
+    primary = respx.post("https://overpass-api.de/api/interpreter").mock(
+        return_value=httpx.Response(200, json=payload)
+    )
+    mirror = respx.post("https://maps.mail.ru/osm/tools/overpass/api/interpreter").mock(
+        return_value=httpx.Response(200, json=payload)
+    )
+    out = await osm.fetch("q")
+    assert out == payload and primary.called and not mirror.called  # healthy primary: no mirror traffic
+
+
+@respx.mock
+async def test_overpass_all_down_raises_friendly_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(osm, "HEDGE_S", 0.0)
+    monkeypatch.setattr(osm, "RETRY_WAIT_S", 0.0)
+    respx.route(method="POST").mock(return_value=httpx.Response(504))
+    with pytest.raises(osm.OverpassError, match="busy"):
+        await osm.fetch("q")
 
 
 def test_name_only_match_with_other_category_is_dropped() -> None:

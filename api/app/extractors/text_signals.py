@@ -54,6 +54,11 @@ _SERVICE_AFTER = re.compile(
 )
 
 
+_SALE_SUBJECT = re.compile(
+    r"\b(?:is|are|now|currently|business|company|practice|shop|firm|agency|garage|clinic)\s+$", re.I
+)
+
+
 def exit_language(pages: Pages) -> list[Evidence]:
     if not pages.pages:
         return []
@@ -74,6 +79,12 @@ def exit_language(pages: Pages) -> list[Evidence]:
             # Extend to the end of the word ("retire" inside "retirement") before the service guard.
             end = m.end() + len(re.match(r"\w*", text[m.end() :]).group())  # type: ignore[union-attr]
             if _SERVICE_AFTER.match(text[end : end + 30]):
+                continue
+            # "for sale" must be about the business ("X is for sale", "business for sale"),
+            # not inventory ("vehicles for sale", "homes for sale").
+            if m.group(0).lower() == "for sale" and not _SALE_SUBJECT.search(
+                text[max(0, m.start() - 25) : m.start()]
+            ):
                 continue
             return [
                 Evidence(

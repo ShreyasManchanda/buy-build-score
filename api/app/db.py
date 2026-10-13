@@ -21,10 +21,12 @@ def get_engine() -> AsyncEngine:
         _engine = create_async_engine(
             s.sqlalchemy_url,
             connect_args={**s.db_connect_args, "statement_cache_size": 0},
-            pool_pre_ping=True,
-            pool_size=5,
-            max_overflow=5,
+            # A run has up to CRAWL_CONCURRENCY companies writing at once; give them connections.
+            # No pre-ping (a round-trip per checkout); recycling under Neon's 5-min idle suspend instead.
+            pool_size=10,
+            max_overflow=15,
             pool_recycle=240,
+            pool_timeout=20,
         )
         _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
     return _engine

@@ -108,3 +108,17 @@ def test_people_regex_ignores_business_words() -> None:
     html = "<p>Owner: Columbus Heating Services. President - Ann Marie Walsh.</p>"
     facts = run_all(Pages([PageView("https://x.com/", "home", html)]), current_year=2026)
     assert facts["people_named"].value == ["Ann Marie Walsh"]
+
+
+@pytest.mark.parametrize(
+    ("html", "want"),
+    [
+        ("<p>Our business is family run. He also has used vehicles for sale on the lot.</p>", False),
+        ("<p>Homes for sale near our company office.</p>", False),
+        ("<p>After 30 years the business is for sale; the owner wants a buyer.</p>", True),
+        ("<p>Business for sale: owner retiring.</p>", True),
+    ],
+)
+def test_for_sale_must_refer_to_the_business(html: str, want: bool) -> None:
+    facts = run_all(Pages([PageView("https://x.com/", "home", html)]), current_year=2026)
+    assert facts["exit_language"].value is want

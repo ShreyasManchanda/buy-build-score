@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import db, problems
 from app.config import get_settings
-from app.routes import health
+from app.routes import health, leads, runs
 
 PREFIX = "/api/v1"
 
@@ -41,4 +41,6 @@ problems.install(app)
 
 api = APIRouter(prefix=PREFIX)
 api.include_router(health.router)
+api.include_router(runs.router)
+api.include_router(leads.router)
 app.include_router(api)

@@ -56,3 +56,18 @@ Ambiguities resolved during the build. One line each: what, why.
 - **Groq model default → `openai/gpt-oss-120b`.** `llama-3.3-70b-versatile` returns 404 (retired); verified with one live call that gpt-oss-120b returns grounded JSON and ignores an injected instruction.
 - **LLM circuit breaker.** On 2026-10-13 `gemini-flash-latest` returned 503 and timeouts for this key; a failed provider is skipped for 5 minutes so a run doesn't pay a 40 s timeout per batch. A missing key isn't treated as an outage.
 - **LLM cache is per company input** (sha256 of models + prompt + name + text), not per batch, so batch composition doesn't defeat the cache.
+
+## M4 — Run orchestration + API
+
+- **Run lease instead of advisory locks.** Neon's pooler is PgBouncer in transaction mode, where session advisory locks don't hold. A `runs.lease_until` column (migration 0002) is claimed with one conditional `UPDATE … RETURNING`, renewed every 15 s, released in `finally`. A second stream of the same run *follows* (polls the DB and mirrors rows) instead of crawling twice; if the runner dies, the follower emits `resume`.
+- **Every discovered company becomes a lead**, including `no_site`, `unreachable` and `blocked_robots` ones (scored from discovery data, thin-data capped) — so the UI can label them instead of silently dropping them.
+- **"Crawled within 7 days → reuse"** is implemented by the caches, not a separate path: the crawl cache returns stored pages with zero requests, extraction is pure, the LLM cache is per input. One code path, same results.
+- **Status events** fire on phase changes and at most once per second while leads stream, carrying counts (`discovered, deduped, chains_dropped, crawled, scored, ok, partial, no_site, unreachable, blocked_robots, failed, llm_calls`).
+- **Overpass hedging.** A live run spent 160 s in discovery trying mirrors in sequence. Now the primary starts first and each mirror joins 3 s later; first success wins and the rest are cancelled; one 10 s retry; 60 s hard cap with a friendly error. A healthy primary means zero mirror traffic.
+- **"for sale" must refer to the business** (`X is for sale`, `business for sale`); a live site said "occasionally has vehicles for sale".
+- **Gemini timeout 15 s** (flash answers in 2–5 s); with the circuit breaker a slow Gemini costs one batch at most.
+- **DB pool 10 + 15 overflow, no pre-ping.** 20 concurrent companies were queueing on 10 connections; `pool_recycle=240` stays under Neon's 5-minute suspend.
+- **Integration tests run against a separate `bbs_test` database** (created on the same Neon project) or CI's Postgres container — never the app database. `TEST_DATABASE_URL` unset → skipped.
+- **Deploy region.** Neon is `us-east-2` (Ohio); Vercel functions should run in `cle1` (Cleveland) — each lead does ~20 DB round-trips, which is ~0.2 s next door vs ~6 s from far away.
+- **MX "couldn't check"** (DNS timeout) is stored as `none`, never `valid_mx`: we don't claim validity we didn't verify. (Schema allows only `valid_mx/no_mx/invalid/none`.)
+- **`POST /runs/csv` dedups and inserts companies at upload time** (no network work), so the stream starts crawling immediately.

@@ -106,8 +106,8 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M4 — Run orchestration + API (2:45–3:15)
 
-- [ ] `POST /api/v1/runs` (thesis) and `POST /api/v1/runs/csv` (multipart, ≤ 2 MB, ≤ 500 rows, header aliases from SPEC.md) create a run row and return `{run_id, stream_url}`.
-- [ ] `GET /api/v1/runs/{id}/stream` executes the run as SSE. Requirements:
+- [x] `POST /api/v1/runs` (thesis) and `POST /api/v1/runs/csv` (multipart, ≤ 2 MB, ≤ 500 rows, header aliases from SPEC.md) create a run row and return `{run_id, stream_url}`.
+- [x] `GET /api/v1/runs/{id}/stream` executes the run as SSE. Requirements:
   - **events:**
     - `status` `{status, counts}`
     - `lead` `LeadOut`
@@ -120,12 +120,12 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
   - **concurrency:** run per-company tasks with `asyncio.as_completed` so rows stream as they finish
   - **time guard:** at 280 s, stop launching work, emit `resume`, and close
   - **re-opening:** a finished run replays stored leads; a partial run resumes with only unscored companies
-- [ ] `POST /api/v1/runs/demo` loads `data/demo_run.json` into the DB (idempotent) and returns its run_id.
-- [ ] `GET /api/v1/runs/{id}` returns status and counts.
-- [ ] `GET /api/v1/runs/{id}/leads` takes these query params: `wd`, `ws`, `wu`, `tier`, `min_d`, `min_s`, `min_u`, `q`, `sort`, `page`, `page_size≤100`. The composite is computed in SQL from the weights.
-- [ ] `GET /api/v1/leads/{id}` returns `LeadDetail` with full evidence.
-- [ ] Errors use RFC 7807 problem+json. Rate limit is 10 runs/hour/IP plus 60 req/min/IP, backed by Postgres. The SSRF guard covers all fetches.
-- [ ] Integration test: with respx-mocked Overpass and 5 sites plus real Postgres, the event order is `status → lead×5 → done`, and the DB holds 5 leads with evidence.
+- [x] `POST /api/v1/runs/demo` loads `data/demo_run.json` into the DB (idempotent) and returns its run_id.
+- [x] `GET /api/v1/runs/{id}` returns status and counts.
+- [x] `GET /api/v1/runs/{id}/leads` takes these query params: `wd`, `ws`, `wu`, `tier`, `min_d`, `min_s`, `min_u`, `q`, `sort`, `page`, `page_size≤100`. The composite is computed in SQL from the weights.
+- [x] `GET /api/v1/leads/{id}` returns `LeadDetail` with full evidence.
+- [x] Errors use RFC 7807 problem+json. Rate limit is 10 runs/hour/IP plus 60 req/min/IP, backed by Postgres. The SSRF guard covers all fetches.
+- [x] Integration test: with respx-mocked Overpass and 5 sites plus real Postgres, the event order is `status → lead×5 → done`, and the DB holds 5 leads with evidence.
 
 ## M5 — UI (3:15–4:15)
 

@@ -61,6 +61,8 @@ class Run(Base):
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The stream holding the lease executes the run; other streams of the same run follow it.
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     leads: Mapped[list[Lead]] = relationship(back_populates="run", cascade="all, delete-orphan")
 
@@ -140,6 +142,9 @@ class Lead(Base):
     exported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     hubspot_id: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 

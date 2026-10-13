@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/bbs"
+    test_database_url: str = ""  # pytest only: a separate database the integration tests may truncate
 
     google_places_api_key: str = ""
     gemini_api_key: str = ""
