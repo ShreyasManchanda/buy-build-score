@@ -173,6 +173,7 @@ export function LeadDrawer({
   onPrev,
   onNext,
   onExport,
+  ensureServer,
 }: {
   lead: Ranked | null;
   weights: Weights;
@@ -181,6 +182,8 @@ export function LeadDrawer({
   onPrev?: () => void;
   onNext?: () => void;
   onExport: (ids: string[]) => void;
+  /** Static demo: make the leads exist server-side before writing feedback. */
+  ensureServer?: () => Promise<unknown>;
 }) {
   const [fetched, setFetched] = useState<{ id: string; detail: LeadDetail | null; error?: string } | null>(null);
   const id = lead?.id ?? null;
@@ -205,6 +208,7 @@ export function LeadDrawer({
   async function vote(v: 1 | -1) {
     if (!lead) return;
     try {
+      await ensureServer?.();
       await api.feedback(lead.id, v);
       toast.success("Thanks — feedback saved", { description: "It will tune future weights." });
     } catch {
@@ -216,7 +220,7 @@ export function LeadDrawer({
     <Sheet open={Boolean(lead)} onOpenChange={(o) => !o && onClose()}>
       <SheetContent
         side="right"
-        className="w-full gap-0 overflow-y-auto p-0 sm:max-w-[480px] data-[side=right]:sm:max-w-[480px]"
+        className="w-full gap-0 overflow-y-auto p-0 data-[side=right]:w-full sm:max-w-[480px] data-[side=right]:sm:max-w-[480px]"
         aria-describedby={undefined}
       >
         {lead && (

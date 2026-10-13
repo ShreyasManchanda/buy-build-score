@@ -157,6 +157,23 @@ async def test_robots_partial_disallow_skips_path_and_marks_partial() -> None:
 
 
 @respx.mock
+async def test_robots_of_the_redirect_target_govern_subpages() -> None:
+    respx.get("https://old-name.com/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get("https://old-name.com/").mock(
+        return_value=httpx.Response(301, headers={"location": "https://new-name.com/"})
+    )
+    respx.get("https://new-name.com/robots.txt").mock(
+        return_value=httpx.Response(200, text="User-agent: *\nDisallow: /\n")
+    )
+    respx.get("https://new-name.com/").mock(return_value=html(HOME))
+    about = respx.route(host="new-name.com", path__startswith="/about")
+    async with Crawler(per_host_interval=0) as c:
+        res = await c.crawl("https://old-name.com/", use_cache=False)
+    assert res.status == "partial" and len(res.pages) == 1
+    assert not about.called
+
+
+@respx.mock
 async def test_robots_5xx_means_do_not_crawl() -> None:
     respx.get("https://flaky.com/robots.txt").mock(return_value=httpx.Response(503))
     home = respx.get("https://flaky.com/").mock(return_value=html(HOME))

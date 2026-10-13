@@ -178,12 +178,12 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 - [ ] `POST /api/v1/leads/{id}/opener`: an owner email of at most 120 words plus a 2-line call opener, grounded only in stored evidence. Return the `evidence_ids` used.
 - [ ] `POST /api/v1/parse-thesis`: plain English → thesis fields (LLM, with a rules fallback).
-- [ ] PageSpeed Insights mobile score (if `PAGESPEED_API_KEY` is set).
+- [x] PageSpeed Insights mobile score (if `PAGESPEED_API_KEY` is set).
 
 ## M8 — Demo, docs, deploy (4:35–5:00)
 
-- [ ] Generate `data/demo_run.json` by running one real thesis locally (e.g. "HVAC, Columbus OH", 60 results), then exporting run + companies + leads + evidence. Commit it.
-- [ ] README.md:
+- [x] Generate `data/demo_run.json` by running one real thesis locally (e.g. "HVAC, Columbus OH", 60 results), then exporting run + companies + leads + evidence. Commit it.
+- [x] README.md (screenshot + tier-A precision left for the owner):
   - pitch
   - screenshot or GIF
   - mermaid architecture
@@ -198,4 +198,4 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
   - the demo run loads
   - one live 20-result run completes
   - `/api/v1/docs` renders
-- [ ] Final pass over SPEC.md's "Acceptance criteria". Every box ticked, or explained in DECISIONS.md.
+- [x] Final pass over SPEC.md's "Acceptance criteria". Every box ticked, or explained in DECISIONS.md.

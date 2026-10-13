@@ -55,6 +55,16 @@ def scores(lead: models.Lead, w: tuple[float, float, float]) -> Scores:
     )
 
 
+def website_url(company: models.Company) -> str | None:
+    """Absolute URL for links and exports. CSV rows often hold a bare domain ("acme.com"),
+    which a browser would treat as a relative path."""
+    raw = (company.raw or {}).get("website") or company.domain
+    if not raw:
+        return None
+    raw = str(raw).strip()
+    return raw if raw.lower().startswith(("http://", "https://")) else f"https://{raw}"
+
+
 def durability_mode(run_mode: str) -> str:
     return "full" if run_mode == "places" else "site_only"
 
@@ -71,7 +81,7 @@ def lead_out(
         company_id=company.id,
         name=company.name,
         domain=company.domain,
-        website=company.raw.get("website") or (f"https://{company.domain}" if company.domain else None),
+        website=website_url(company),
         city=company.city,
         region=company.region,
         phone=company.phone_e164,

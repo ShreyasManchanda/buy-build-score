@@ -27,6 +27,7 @@ from sqlalchemy.dialects.postgresql import insert
 from app import db, models, serialize
 from app.config import get_settings
 from app.integrations import osm as osm_api
+from app.integrations import pagespeed
 from app.integrations import places as places_api
 from app.integrations.llm import LlmBatcher
 from app.pipeline import dedup as dedup_mod
@@ -319,7 +320,8 @@ async def process_company(
             street_address=company.address if company.address and has_street else None,
         )
 
-    crawl = await crawler.crawl(website)
+    # PageSpeed (only with a key) runs alongside the crawl; it never delays a lead on its own.
+    crawl, psi = await asyncio.gather(crawler.crawl(website), pagespeed.mobile_score(website))
     if crawl.pages:
         ctx.bump("crawled")
     ctx.bump(crawl.status)
@@ -327,6 +329,7 @@ async def process_company(
     ex = await extract(crawl, str(company_id), name, batcher, datetime.now(UTC).year)
     facts.website_responds = crawl.reachable
     facts.home_url = crawl.home.final_url if crawl.home else website
+    facts.pagespeed = psi if crawl.reachable else None
     result = score(ex.facts, facts, crawl.status)
 
     email = ex.facts["email"].value if "email" in ex.facts else raw.get("discovered_email")
@@ -356,10 +359,25 @@ async def run_discovery(ctx: Ctx, run: models.Run) -> AsyncIterator[str]:
     q = run.query
     yield ctx.status("discovering")
     await _update_run(ctx.run_id, status="discovering", started_at=datetime.now(UTC))
-    geo = await geocode_mod.geocode(q["location"])
-    found = await discover_mod.discover(
-        q["industry"], q["location"], geo, int(q["radius_km"]), int(q["max_results"]), bool(q.get("expand"))
-    )
+
+    async def _find() -> tuple[Any, discover_mod.Discovery]:
+        g = await geocode_mod.geocode(q["location"])
+        f = await discover_mod.discover(
+            q["industry"], q["location"], g, int(q["radius_km"]), int(q["max_results"]), bool(q.get("expand"))
+        )
+        return g, f
+
+    # Discovery can take up to a minute on busy Overpass servers; keep the stream alive meanwhile.
+    task = asyncio.create_task(_find())
+    try:
+        while not task.done():
+            await asyncio.wait({task}, timeout=HEARTBEAT_S)
+            if not task.done():
+                yield HEARTBEAT
+    finally:
+        if not task.done():
+            task.cancel()
+    geo, found = task.result()
     ctx.mode = found.mode
     for w in found.warnings:
         warn = {"company": None, "reason": w, "upstream": True}
@@ -462,16 +480,27 @@ async def stream(run_id: uuid.UUID) -> AsyncIterator[str]:
     try:
         async for ev in _execute(ctx, run):
             yield ev
-    except (geocode_mod.GeocodeError, osm_api.OverpassError, places_api.PlacesError) as e:
+    except geocode_mod.GeocodeError as e:
+        # Permanent: the location doesn't exist. The run is over.
         await _update_run(
             run.id, status="failed", error=str(e), finished_at=datetime.now(UTC), counts=ctx.counts
         )
         yield sse("error", {"message": str(e)})
+    except (osm_api.OverpassError, places_api.PlacesError) as e:
+        # Transient (public servers busy): keep the run resumable; reopening retries discovery.
+        await _update_run(run.id, error=str(e), counts=ctx.counts)
+        yield sse("error", {"message": f"{e} Reload this page to retry.", "retryable": True})
     except Exception as e:
         log.exception("run %s failed", run.id)
-        msg = "Something went wrong while running this thesis. Reopen the run to resume."
-        await _update_run(run.id, status="failed", error=f"{type(e).__name__}: {e}", counts=ctx.counts)
-        yield sse("error", {"message": msg})
+        # Leave the status alone: scored leads are kept and reopening resumes the rest.
+        await _update_run(run.id, error=f"{type(e).__name__}: {e}", counts=ctx.counts)
+        yield sse(
+            "error",
+            {
+                "message": "Something went wrong while running this thesis. Reload to resume.",
+                "retryable": True,
+            },
+        )
     finally:
         await release_lease(run.id)
 

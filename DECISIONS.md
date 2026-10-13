@@ -71,3 +71,51 @@ Ambiguities resolved during the build. One line each: what, why.
 - **Deploy region.** Neon is `us-east-2` (Ohio); Vercel functions should run in `cle1` (Cleveland) — each lead does ~20 DB round-trips, which is ~0.2 s next door vs ~6 s from far away.
 - **MX "couldn't check"** (DNS timeout) is stored as `none`, never `valid_mx`: we don't claim validity we didn't verify. (Schema allows only `valid_mx/no_mx/invalid/none`.)
 - **`POST /runs/csv` dedups and inserts companies at upload time** (no network work), so the stream starts crawling immediately.
+
+## M5 — UI
+
+- **Static demo.** "Try the demo run" opens `/runs/demo`, which renders `web/public/demo/run.json` (API-shaped `LeadDetail[]`) straight from the CDN — instant, zero keys, works even if the API is cold. Export from the demo calls `POST /runs/demo` first (idempotent, same lead ids) and falls back to a browser-built CSV with the same columns if the API is down.
+- **Rows hold arrival order while streaming**; they rank once the run finishes or the user sorts, moves a slider or presses "Rank now". New rows fade in once (150 ms), not on every virtualised re-mount.
+- **SSE goes direct to `:8000` in dev** (`NEXT_PUBLIC_STREAM_ORIGIN`), because the Next dev proxy can buffer streams. In production it's same-origin through Vercel Services.
+- **EventSource is closed on `done`/`error`** (otherwise the browser auto-reconnects and replays forever) and reopened on `resume`.
+- **Plain-English thesis (FR-17) is rules-only, client-side** ("HVAC companies near Columbus, OH", "within 25 miles"); no LLM call needed for this.
+- **Map pin is a Leaflet `CircleMarker`** on OSM tiles: no marker images to bundle, attribution shown.
+- **Run page is a server shell + client child under `<Suspense>`**: with Cache Components, `useParams()` outside Suspense blocks prerendering.
+- **Visual QA pending.** The machine ran out of memory while the dev servers were up and the Chrome extension wasn't connected, so the screens were verified by typecheck, lint, unit tests and a production `next build`, not by eye. Screenshots for the README are a manual step.
+
+## M6 — Export + validation
+
+- **CSV is de-duplicated by company** and every cell starting with `= + - @` is prefixed with `'` (spreadsheet formula injection).
+- **Export re-ranks with the caller's weights**, so the CSV tiers match what the user sees after moving sliders.
+- **HubSpot without a token returns 501 problem+json**; the UI disables the button with a tooltip.
+
+## Cut list applied (M7)
+
+Following SPEC's order: HubSpot push was built (it was cheap once export existed). **Cut:** owner opener drafting (FR-16). Plain-English thesis shipped rules-only (above). PageSpeed Insights was added during the audit (it was a ~40-line integration on top of an existing scorer path): only with `PAGESPEED_API_KEY`, run concurrently with the crawl, cached 7 days, TTFB/page-size fallback otherwise. Never cut: evidence links, the demo run, the README.
+
+## Audit fixes (after M6)
+
+- **Mobile drawer was 75% wide, not full-screen.** shadcn's `cn` keeps `data-[side=right]:w-3/4`, which out-specifies a plain `w-full`; overrides now use the same data-variant.
+- **CI web job couldn't install pnpm**: `pnpm/action-setup` looks for `packageManager` in the root `package.json`; pointed it at `web/package.json`.
+- **Cache/rate-limit rows were never deleted.** Expired rows are now purged whenever a run is created (no cron needed).
+- **Rate-limit IP** prefers Vercel's `X-Real-IP`; the first `X-Forwarded-For` hop is client-controlled.
+- **Bare-domain websites** (common in CSVs) became relative links; one `website_url()` now returns absolute URLs for the API and CSV.
+- **Only a missing location fails a run.** Busy Overpass/Places or an unexpected error leaves the run resumable (scored leads kept) and the UI offers Retry; previously the message said "reopen to resume" while the run was marked failed.
+- **robots.txt of the redirect target** now governs subpages when a site redirects to another host.
+- **Heartbeats during discovery**: geocoding + Overpass can take a minute; the stream now sends a keep-alive every 15 s there too.
+- **Demo feedback** loads the demo server-side first (it 404'd before); the sort arrow is hidden while rows are still in arrival order.
+- **Order-dependent test**: the process-wide Overpass throttle leaked between tests; discovery tests now get a fresh one.
+
+## SPEC acceptance criteria — status
+
+| Criterion | Status |
+| --- | --- |
+| Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 5 B / 54 C — OSM dental data is thin (29 listings without a website). |
+| Live 60-business run ≤ 90 s, first row ≤ 10 s | ⚠️ Not verified in production. Locally (India → Neon Ohio, ~0.3 s per DB round-trip) a 59-lead run took 163 s with the first row at 85 s, dominated by busy public Overpass servers. Needs a measurement on Vercel `cle1`. |
+| Every A-tier lead has ≥ 1 evidence item with a working source link per sub-score | ✅ by construction: every known signal (including 0-point ones) is an evidence row with a source URL (asserted in tests); A requires durability ≥ 30, so durability always has evidence. |
+| Slider re-ranks < 100 ms, no network | ✅ pure in-browser re-rank (`lib/score.ts`); vitest re-ranks 500 leads well under 100 ms. |
+| SaaSquatch CSV upload maps headers and scores rows | ✅ client preview + server mapping, tested (25-row file, 6 duplicates → 19). |
+| CSV export opens in Excel/Sheets, correct columns, no duplicates | ✅ UTF-8 BOM, spec columns, de-duplicated by company, formula-safe (integration-tested). |
+| robots.txt-disallowed site not crawled, labelled in UI | ✅ tested (full and partial disallow, 5xx robots, redirect target); amber icon + tooltip + banner. |
+| pytest and vitest pass in CI; `/docs` shows OpenAPI | ✅ locally (134 + 6 integration, 11 vitest); CI runs on first push. `/api/v1/docs` served. |
+| README covers setup, architecture, scoring, limits, time log | ✅ — screenshot and tier-A precision are placeholders for the owner. |

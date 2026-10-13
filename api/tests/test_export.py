@@ -144,3 +144,19 @@ def test_phone_validity() -> None:
 )
 def test_csv_cells_neutralise_formulas(raw: str | None, out: str) -> None:
     assert _cell(raw) == out
+
+
+def test_pagespeed_parse() -> None:
+    from app.integrations import pagespeed
+
+    assert pagespeed.parse({"lighthouseResult": {"categories": {"performance": {"score": 0.42}}}}) == 42
+    assert pagespeed.parse({}) is None
+
+
+async def test_pagespeed_is_off_without_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.integrations import pagespeed
+
+    monkeypatch.setenv("PAGESPEED_API_KEY", "")
+    get_settings.cache_clear()
+    assert await pagespeed.mobile_score("https://x.com") is None
+    get_settings.cache_clear()

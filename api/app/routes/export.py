@@ -126,7 +126,7 @@ async def export_csv(body: ExportIn) -> Response:
                 _cell(x)
                 for x in (
                     c.name,
-                    c.raw.get("website") or (f"https://{c.domain}" if c.domain else ""),
+                    serialize.website_url(c),
                     c.phone_e164,
                     c.address or c.raw.get("street_address_site"),
                     c.city,

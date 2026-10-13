@@ -275,11 +275,12 @@ export function RunView({ runId }: { runId: string }) {
             {state.error && state.leads.size === 0 ? (
               <EmptyState
                 icon={<TriangleAlertIcon />}
-                title="This run couldn't start"
+                title="This run couldn't finish"
                 body={state.error}
                 actions={
                   <>
-                    <Button asChild>
+                    <Button onClick={() => window.location.reload()}>Retry</Button>
+                    <Button variant="outline" asChild>
                       <Link href="/">New search</Link>
                     </Button>
                     <Button variant="outline" asChild>
@@ -317,7 +318,8 @@ export function RunView({ runId }: { runId: string }) {
             ) : (
               <LeadTable
                 rows={rows}
-                sort={frozen ? { key: "composite", desc: true } : sort}
+                sort={sort}
+                sortActive={!frozen}
                 onSort={onSort}
                 selected={selected}
                 onToggle={toggle}
@@ -370,7 +372,7 @@ export function RunView({ runId }: { runId: string }) {
       )}
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-sm">
+        <SheetContent side="left" className="w-full overflow-y-auto data-[side=left]:w-full data-[side=left]:sm:max-w-sm">
           <SheetHeader className="px-4 pb-0">
             <SheetTitle>Filters &amp; weights</SheetTitle>
           </SheetHeader>
@@ -386,6 +388,7 @@ export function RunView({ runId }: { runId: string }) {
         onPrev={openIndex > 0 ? () => setOpenId(rows[openIndex - 1].id) : undefined}
         onNext={openIndex >= 0 && openIndex < rows.length - 1 ? () => setOpenId(rows[openIndex + 1].id) : undefined}
         onExport={exportIds}
+        ensureServer={runId === "demo" ? api.createDemoRun : undefined}
       />
     </div>
   );

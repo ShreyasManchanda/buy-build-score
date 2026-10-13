@@ -13,6 +13,15 @@ from app.schemas import GeoPoint
 
 from .conftest import FIXTURES
 
+
+@pytest.fixture(autouse=True)
+def _fresh_throttle(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The per-host API throttle is process-wide; don't let one test's requests delay the next."""
+    from app import net
+
+    monkeypatch.setattr(net, "api_throttle", net.HostThrottle(0))
+
+
 GEO = GeoPoint(lat=39.9612, lng=-82.9988, display_name="Columbus, Ohio", country_code="US")
 
 

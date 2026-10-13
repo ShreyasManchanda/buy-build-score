@@ -22,6 +22,8 @@ interface Props {
   openId: string | null;
   fresh: Set<string>;
   showReviews: boolean;
+  /** While rows stream in arrival order, no column is "sorted" — don't show an arrow. */
+  sortActive?: boolean;
 }
 
 function SortHead({
@@ -30,14 +32,16 @@ function SortHead({
   onSort,
   children,
   className,
+  enabled = true,
 }: {
   k: SortKey;
   sort: Sort;
+  enabled?: boolean;
   onSort: (k: SortKey) => void;
   children: React.ReactNode;
   className?: string;
 }) {
-  const active = sort.key === k;
+  const active = enabled && sort.key === k;
   return (
     <button
       type="button"
@@ -87,7 +91,7 @@ export function LeadTable(p: Props) {
     {
       id: "company",
       header: () => (
-        <SortHead k="name" sort={p.sort} onSort={p.onSort}>
+        <SortHead k="name" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false}>
           Company
         </SortHead>
       ),
@@ -113,7 +117,7 @@ export function LeadTable(p: Props) {
     {
       id: "composite",
       header: () => (
-        <SortHead k="composite" sort={p.sort} onSort={p.onSort} className="justify-end">
+        <SortHead k="composite" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false} className="justify-end">
           Score
         </SortHead>
       ),
@@ -125,13 +129,13 @@ export function LeadTable(p: Props) {
       id: "dsu",
       header: () => (
         <span className="flex items-center gap-2">
-          <SortHead k="durability" sort={p.sort} onSort={p.onSort}>
+          <SortHead k="durability" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false}>
             D
           </SortHead>
-          <SortHead k="succession" sort={p.sort} onSort={p.onSort}>
+          <SortHead k="succession" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false}>
             S
           </SortHead>
-          <SortHead k="upside" sort={p.sort} onSort={p.onSort}>
+          <SortHead k="upside" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false}>
             U
           </SortHead>
         </span>
@@ -144,7 +148,7 @@ export function LeadTable(p: Props) {
     {
       id: "founded",
       header: () => (
-        <SortHead k="founded" sort={p.sort} onSort={p.onSort}>
+        <SortHead k="founded" sort={p.sort} onSort={p.onSort} enabled={p.sortActive !== false}>
           Founded
         </SortHead>
       ),

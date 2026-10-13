@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import Request
 from sqlalchemy import text
 
-from app import db
+from app import cache, db
 from app.config import get_settings
 from app.problems import Problem
 
@@ -30,12 +30,14 @@ _INCR = text(
 
 
 def client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for")
-    if fwd:
-        return fwd.split(",")[0].strip()
+    # Vercel sets X-Real-IP to the connecting client; prefer it over X-Forwarded-For,
+    # whose first hop a client can write itself to dodge the limit.
     real = request.headers.get("x-real-ip")
     if real:
         return real.strip()
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[-1].strip()  # the hop our edge appended, not the client's claim
     return request.client.host if request.client else "unknown"
 
 
@@ -66,6 +68,12 @@ async def limit_runs(request: Request) -> None:
     s = get_settings()
     now = datetime.now(UTC)
     key = f"rl:{client_ip(request)}:{now:%Y%m%d%H}"
+    # Housekeeping without a cron: expired counters/cache rows are deleted whenever a run is created,
+    # so the cache table can't grow without bound on Neon's free storage (1 GB/project).
+    try:
+        await cache.purge_expired()
+    except Exception as e:  # never block a run on housekeeping
+        log.warning("cache purge failed: %s", e)
     if await hit(key, timedelta(hours=1)) > s.runs_per_hour_per_ip:
         raise Problem(
             429,

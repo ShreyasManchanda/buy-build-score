@@ -352,6 +352,17 @@ class Crawler:
         )
         result.js_rendered = looks_js_rendered(home.text)
 
+        # Redirected to another host (www., a new domain)? Its own robots.txt governs the subpages.
+        final_origin = "{0.scheme}://{0.netloc}".format(urlsplit(home.url))
+        if urlsplit(final_origin).hostname != urlsplit(origin).hostname:
+            robots = await _robots(self.client, self.throttle, final_origin)
+            if not robots.can_fetch(ROBOTS_UA, home.url):
+                # The page we already read was public; stop there and read nothing else.
+                result.skipped_by_robots.append(home.url)
+                result.total_bytes = home.nbytes
+                result.status = "partial"
+                return result
+
         failures = 0
         for kind, url in select_pages(home.text, home.url):
             if not robots.can_fetch(ROBOTS_UA, url):

@@ -9,3 +9,7 @@ Wall-clock build time, AI-assisted (Claude Code). Design/research/spec writing a
 | M2 — Crawler | 2026-10-13 21:05 | robots, 1 req/s/host, SSRF per hop, retries, 3 MB cap, TLS fallback, 7-day cache. 54 tests. Live crawl of 6 Columbus sites in 7.8 s. |
 | M3 — Extractors + scoring + LLM | 2026-10-13 22:05 | 14 extractors, scorer, Gemini→Groq with quote guard + circuit breaker. 11 hand-written fixtures. 115 tests. |
 | M4 — Run orchestration + API | 2026-10-13 23:20 | SSE run with lease/follow/resume/replay, runs + leads + demo routes, rate limits, problem+json. 121 unit + 5 integration tests (real Postgres). Live 20-lead auto-repair run: done in 140 s from India→Neon. |
+| M5 — UI | 2026-10-14 | Thesis + run screens, drawer, filters/weights, mobile cards, static demo (59 leads from a live dental run). `next build` green. Visual QA blocked by low memory. |
+| M6 — Export + validation | 2026-10-14 | CSV export, HubSpot push, MX/phone validation. 131 unit + 6 integration tests. |
+| M7 — P1 extras | — | Opener cut per SPEC cut list; plain-English thesis rules-only; PageSpeed added during the audit. |
+| M8 — Demo, docs, audit | 2026-10-14 | Demo snapshot, README, full audit (10 fixes, see DECISIONS.md). Deploy + prod smoke test + screenshot are manual (need the owner's GitHub/Vercel accounts). |
