@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { elapsed, thesisSummary } from "@/lib/format";
+import { elapsed, plural, thesisSummary } from "@/lib/format";
 import type { RunState } from "@/lib/use-run";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +36,14 @@ export function RunHeader({ state }: { state: RunState }) {
   const siteOnly = state.mode !== "places";
   const summary = thesisSummary(state.run) || (state.run ? "" : "Loading run…");
 
+  // Progress in the tab title, so a run working in a background tab is visible from the tab strip.
+  useEffect(() => {
+    if (!summary || summary === "Loading run…") return;
+    document.title = state.done
+      ? `${state.error ? "⚠" : "✓"} ${summary} — Buy & Build Score`
+      : `${total ? `${scored}/${total}` : "…"} ${summary} — Buy & Build Score`;
+  }, [summary, state.done, state.error, scored, total]);
+
   const label: Record<Stage, string> = {
     discovering: total ? `Discovered ${state.counts.discovered ?? total}` : "Discovering",
     crawling: total ? `Reading sites ${scored}/${total}` : "Reading sites",
@@ -51,7 +59,8 @@ export function RunHeader({ state }: { state: RunState }) {
             <ChevronLeftIcon />
           </Link>
         </Button>
-        <div className="min-w-0 flex-1">
+        {/* Phones: title owns the first line; stage chips and timer wrap underneath. */}
+        <div className="min-w-0 flex-1 basis-[calc(100%-3rem)] md:basis-0">
           <h1 className="truncate text-lg leading-6 font-semibold tracking-tight sm:text-xl">{summary}</h1>
           <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
             <span>{state.mode === "places" ? "Google Places + websites" : state.mode === "csv" ? "Your CSV + websites" : "OpenStreetMap + websites"}</span>
@@ -65,7 +74,7 @@ export function RunHeader({ state }: { state: RunState }) {
               </Tooltip>
             )}
             {(state.counts.chains_dropped ?? 0) > 0 && <span>· {state.counts.chains_dropped} chains filtered out</span>}
-            {(state.counts.llm_calls ?? 0) > 0 && <span>· {state.counts.llm_calls} LLM calls</span>}
+            {(state.counts.llm_calls ?? 0) > 0 && <span>· {plural(state.counts.llm_calls ?? 0, "LLM call")}</span>}
           </p>
         </div>
 

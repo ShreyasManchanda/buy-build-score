@@ -106,6 +106,19 @@ Following SPEC's order: HubSpot push was built (it was cheap once export existed
 - **Demo feedback** loads the demo server-side first (it 404'd before); the sort arrow is hidden while rows are still in arrival order.
 - **Order-dependent test**: the process-wide Overpass throttle leaked between tests; discovery tests now get a fresh one.
 
+## Browser test (Chrome, production build, 2026-10-14)
+
+Tested end to end in Chrome against `next start` + uvicorn + Neon: landing parse, demo run, filters, weights, drawer, keyboard, a live thesis run, a CSV upload, replay, export, light/dark, 375 px / 860 px / 1568 px. Fixed what it found:
+
+- **Demo load race → 500.** Two concurrent `POST /runs/demo` (two Export clicks) both passed the "already loaded?" check and the second crashed on the duplicate run id. Now every insert is a bulk `ON CONFLICT DO NOTHING`; three concurrent loads all return 200.
+- **CSV export corrupted phone numbers.** The formula guard turned `+16146180116` into `'+16146180116`. Plain numbers and phone numbers are now left intact; real formulas (`=…`, `+SUM(…)`, `-cmd|…`, `@…`) are still neutralised.
+- **Table overflowed sideways at medium widths.** Columns now adapt to the table's measured width: "Why" drops below 980 px, "Founded" below 760 px, reviews below 1080 px.
+- **Run header broke on phones** (title truncated to "De…", one word per line). The title owns the first line; stage chips wrap below. The selection bar is compact on phones.
+- **Rows froze in background tabs.** Lead batching used `requestAnimationFrame`, which browsers pause in hidden tabs; it now uses a 60 ms timer. The tab title shows live progress ("12/59 Dental · Columbus…", then "✓ …").
+- **Company upserts were one session per company** (~5 round-trips each): one prefetch query + one commit per run now.
+- Copy: "1 LLM calls" → "1 LLM call"; the demo card no longer stretches next to the CSV preview.
+- `API_PROXY_ORIGIN` (build-time, opt-in) lets a production build proxy `/api` to a local API for testing; never set on Vercel.
+
 ## SPEC acceptance criteria — status
 
 | Criterion | Status |

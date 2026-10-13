@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -102,11 +103,17 @@ def _evidence_line(e: models.Evidence) -> str:
     return f"{LABELS.get(e.signal, e.signal)}: {e.value or ''} ({e.source_url or ''})"
 
 
+_NUMERIC = re.compile(r"[+-][\d\s().-]*\d[\d\s().-]*")
+
+
 def _cell(v: Any) -> str:
     if v is None:
         return ""
     s = str(v)
     # CSV formula injection guard: a cell starting with = + - @ would execute in Excel/Sheets.
+    # Plain numbers and phone numbers ("+16146180116", "-3.5") are data, not formulas: leave them intact.
+    if s[:1] in ("+", "-") and _NUMERIC.fullmatch(s):
+        return s
     return "'" + s if s[:1] in ("=", "+", "-", "@", "\t", "\r") else s
 
 

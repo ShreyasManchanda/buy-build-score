@@ -32,8 +32,9 @@ export const CSV_COLUMNS = [
 function cell(v: unknown): string {
   if (v === null || v === undefined) return "";
   const s = String(v);
-  // Neutralise spreadsheet formula injection, then quote.
-  const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  // Neutralise spreadsheet formula injection, then quote. Phone numbers / plain numbers stay intact.
+  const numeric = /^[+-][\d\s().-]*\d[\d\s().-]*$/.test(s);
+  const safe = !numeric && /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
   return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 

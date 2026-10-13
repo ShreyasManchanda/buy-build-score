@@ -82,46 +82,52 @@ def _parse_dt(d: dict[str, Any], *keys: str) -> dict[str, Any]:
 
 
 async def load(path: Path | None = None) -> uuid.UUID:
+    """Idempotent and safe under concurrent calls (two Export clicks): every insert is
+    ON CONFLICT DO NOTHING, in bulk, so a second loader is a no-op instead of a 500."""
     data = json.loads((path or demo_path()).read_text(encoding="utf-8"))
     run_id = uuid.UUID(data["run"]["id"])
     async with db.sessionmaker()() as s:
         if await s.get(models.Run, run_id) is not None:
             return run_id
-        for c in data["companies"]:
-            c = _parse_dt(dict(c), "crawled_at")
-            stmt = insert(models.Company).values(**c).on_conflict_do_nothing()
-            await s.execute(stmt)
-        await s.flush()
+        companies = [_parse_dt(dict(c), "crawled_at") for c in data["companies"]]
+        if companies:
+            await s.execute(insert(models.Company).values(companies).on_conflict_do_nothing())
         # Companies may already exist under another id (same domain crawled live); map to the stored row.
+        ids = [uuid.UUID(c["id"]) for c in data["companies"]]
+        domains = [c["domain"] for c in data["companies"] if c.get("domain")]
+        stored = (
+            await s.execute(
+                select(models.Company.id, models.Company.domain).where(
+                    (models.Company.id.in_(ids)) | (models.Company.domain.in_(domains))
+                )
+            )
+        ).all()
+        by_id = {str(i) for i, _ in stored}
+        by_domain = {d: i for i, d in stored if d}
         id_map: dict[str, uuid.UUID] = {}
         for c in data["companies"]:
-            row = await s.get(models.Company, uuid.UUID(c["id"]))
-            if row is None and c.get("domain"):
-                row = (
-                    await s.execute(select(models.Company).where(models.Company.domain == c["domain"]))
-                ).scalar_one_or_none()
-            if row is not None:
-                id_map[c["id"]] = row.id
+            if c["id"] in by_id:
+                id_map[c["id"]] = uuid.UUID(c["id"])
+            elif c.get("domain") in by_domain:
+                id_map[c["id"]] = by_domain[c["domain"]]
+
         run = _parse_dt(dict(data["run"]), "created_at", "started_at", "finished_at", "lease_until")
         run["plan"] = [str(id_map.get(cid, cid)) for cid in run.get("plan", [])]
-        s.add(models.Run(**run))
-        await s.flush()
+        await s.execute(insert(models.Run).values(**run).on_conflict_do_nothing())
+        leads = []
         for lead in data["leads"]:
             lead = _parse_dt(dict(lead), "exported_at", "created_at", "updated_at")
-            lead["company_id"] = id_map.get(lead["company_id"], lead["company_id"])
-            await s.execute(insert(models.Lead).values(**lead).on_conflict_do_nothing())
-        have = {
-            (str(e.company_id), e.signal)
-            for e in (
-                await s.execute(
-                    select(models.Evidence).where(models.Evidence.company_id.in_(list(id_map.values())))
-                )
-            ).scalars()
-        }
-        for e in data["evidence"]:
-            cid = id_map.get(e["company_id"])
-            if cid is None or (str(cid), e["signal"]) in have:
-                continue
-            s.add(models.Evidence(**{**e, "company_id": cid}))
+            if lead["company_id"] in id_map:
+                lead["company_id"] = id_map[lead["company_id"]]
+                leads.append(lead)
+        if leads:
+            await s.execute(insert(models.Lead).values(leads).on_conflict_do_nothing())
+        evidence = [
+            {**e, "company_id": id_map[e["company_id"]]}
+            for e in data["evidence"]
+            if e["company_id"] in id_map
+        ]
+        if evidence:
+            await s.execute(insert(models.Evidence).values(evidence).on_conflict_do_nothing())
         await s.commit()
     return run_id

@@ -3,7 +3,7 @@
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EvidenceChip, MiniBars, TierBadge } from "@/components/score-ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Ranked } from "@/lib/score";
@@ -61,6 +61,15 @@ function SortHead({
 
 export function LeadTable(p: Props) {
   const parent = useRef<HTMLDivElement>(null);
+  // Columns adapt to the space the table actually has (rail + drawer + window size vary).
+  const [width, setWidth] = useState(1200);
+  useEffect(() => {
+    const el = parent.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const allOn = p.rows.length > 0 && p.rows.every((r) => p.selected.has(r.id));
   const someOn = !allOn && p.rows.some((r) => p.selected.has(r.id));
 
@@ -193,8 +202,14 @@ export function LeadTable(p: Props) {
   ];
 
   // TanStack Table/Virtual return non-memoizable functions; the React Compiler skips this component (expected).
+  const shown = columns.filter(
+    (c) =>
+      (c.id !== "evidence" || width >= 980) &&
+      (c.id !== "founded" || width >= 760) &&
+      (c.id !== "reviews" || width >= 1080),
+  );
   // eslint-disable-next-line react-hooks/incompatible-library
-  const table = useReactTable({ data: p.rows, columns, getCoreRowModel: getCoreRowModel(), getRowId: (r) => r.id });
+  const table = useReactTable({ data: p.rows, columns: shown, getCoreRowModel: getCoreRowModel(), getRowId: (r) => r.id });
   const tableRows = table.getRowModel().rows;
   const virtual = useVirtualizer({
     count: tableRows.length,
@@ -203,9 +218,18 @@ export function LeadTable(p: Props) {
     overscan: 12,
   });
 
-  const grid = p.showReviews
-    ? "36px 40px minmax(180px,1.6fr) 56px 132px 64px 92px minmax(150px,1.3fr) 84px"
-    : "36px 40px minmax(180px,1.6fr) 56px 132px 64px minmax(150px,1.4fr) 84px";
+  const COL_WIDTH: Record<string, string> = {
+    select: "36px",
+    tier: "40px",
+    company: width < 700 ? "minmax(120px,1fr)" : "minmax(180px,1.6fr)",
+    composite: "56px",
+    dsu: width < 700 ? "104px" : "132px",
+    founded: "64px",
+    reviews: "92px",
+    evidence: "minmax(150px,1.3fr)",
+    contact: "84px",
+  };
+  const grid = shown.map((c) => COL_WIDTH[c.id as string]).join(" ");
 
   return (
     <div ref={parent} className="relative h-full overflow-auto" role="table" aria-label="Ranked leads" aria-rowcount={tableRows.length}>

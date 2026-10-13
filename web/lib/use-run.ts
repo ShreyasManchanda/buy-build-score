@@ -56,7 +56,7 @@ export function useRun(runId: string): RunState {
   const pending = useRef<LeadOut[]>([]);
   const flushTimer = useRef<number | null>(null);
 
-  // Batch lead events into one render per animation frame (a replay delivers hundreds at once).
+  // Batch lead events into one render every ~60 ms (a replay delivers hundreds at once).
   const flush = useCallback(() => {
     flushTimer.current = null;
     const batch = pending.current;
@@ -126,7 +126,8 @@ export function useRun(runId: string): RunState {
       });
       es.addEventListener("lead", (ev) => {
         pending.current.push(JSON.parse((ev as MessageEvent).data));
-        if (flushTimer.current === null) flushTimer.current = window.requestAnimationFrame(flush);
+        // A timer, not requestAnimationFrame: rAF is paused in background tabs, and runs take minutes.
+        if (flushTimer.current === null) flushTimer.current = window.setTimeout(flush, 60);
       });
       es.addEventListener("warning", (ev) => {
         const w = JSON.parse((ev as MessageEvent).data) as LeadWarning;
@@ -171,7 +172,7 @@ export function useRun(runId: string): RunState {
     return () => {
       closed = true;
       esRef.current?.close();
-      if (flushTimer.current !== null) cancelAnimationFrame(flushTimer.current);
+      if (flushTimer.current !== null) window.clearTimeout(flushTimer.current);
     };
   }, [runId, flush]);
 

@@ -140,7 +140,18 @@ def test_phone_validity() -> None:
 
 
 @pytest.mark.parametrize(
-    ("raw", "out"), [("=HYPERLINK(1)", "'=HYPERLINK(1)"), ("+1 614", "'+1 614"), ("Acme", "Acme"), (None, "")]
+    ("raw", "out"),
+    [
+        ("=HYPERLINK(1)", "'=HYPERLINK(1)"),
+        ("+SUM(A1:A9)", "'+SUM(A1:A9)"),
+        ("-cmd|calc", "'-cmd|calc"),
+        ("@x", "'@x"),
+        ("+16146180116", "+16146180116"),
+        ("+1 (614) 618-0116", "+1 (614) 618-0116"),
+        ("-3.5", "-3.5"),
+        ("Acme", "Acme"),
+        (None, ""),
+    ],
 )
 def test_csv_cells_neutralise_formulas(raw: str | None, out: str) -> None:
     assert _cell(raw) == out

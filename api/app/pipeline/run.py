@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import delete, select, text, update
+from sqlalchemy import delete, or_, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 
 from app import db, models, serialize
@@ -126,66 +126,87 @@ def _company_raw(c: CompanyIn) -> dict[str, Any]:
     return {k: v for k, v in raw.items() if v not in (None, "", [])}
 
 
-async def upsert_company(c: CompanyIn) -> uuid.UUID:
-    """Companies are global (keyed by domain / OSM id / Place id) so runs share crawls and evidence."""
-    async with db.sessionmaker()() as s:
-        existing: models.Company | None = None
-        for col, val in (
-            (models.Company.domain, c.domain),
-            (models.Company.osm_id, c.osm_id),
-            (models.Company.place_id, c.place_id),
-        ):
-            if val:
-                existing = (await s.execute(select(models.Company).where(col == val))).scalar_one_or_none()
-                if existing:
-                    break
-        if existing is None and not c.domain and c.postcode:
-            existing = (
-                await s.execute(
-                    select(models.Company).where(
-                        models.Company.name == c.name, models.Company.postcode == c.postcode
-                    )
-                )
-            ).scalar_one_or_none()
-        fields = {
-            "name": c.name,
-            "domain": c.domain,
-            "phone_e164": c.phone_e164,
-            "address": c.address,
-            "city": c.city,
-            "region": c.region,
-            "postcode": c.postcode,
-            "country": c.country,
-            "lat": c.lat,
-            "lng": c.lng,
-            "place_id": c.place_id,
-            "osm_id": c.osm_id,
-            "rating": c.rating,
-            "review_count": c.review_count,
-        }
-        if existing is None:
-            company = models.Company(
-                **{k: v for k, v in fields.items() if v is not None}, raw=_company_raw(c)
-            )
-            if not c.website:
-                company.crawl_status = "no_site"
-            s.add(company)
-        else:
-            company = existing
-            for k, v in fields.items():
-                if v is not None:
-                    setattr(company, k, v)
-            company.raw = {**(company.raw or {}), **_company_raw(c)}
-        await s.commit()
-        return company.id
+def _fields(c: CompanyIn) -> dict[str, Any]:
+    return {
+        "name": c.name,
+        "domain": c.domain,
+        "phone_e164": c.phone_e164,
+        "address": c.address,
+        "city": c.city,
+        "region": c.region,
+        "postcode": c.postcode,
+        "country": c.country,
+        "lat": c.lat,
+        "lng": c.lng,
+        "place_id": c.place_id,
+        "osm_id": c.osm_id,
+        "rating": c.rating,
+        "review_count": c.review_count,
+    }
 
 
 async def insert_companies(companies: list[CompanyIn]) -> list[str]:
-    ids: list[str] = []
-    for c in companies:
-        cid = str(await upsert_company(c))
-        if cid not in ids:
-            ids.append(cid)
+    """Upsert a run's companies in one session: one prefetch query, in-memory matching, one commit.
+
+    Companies are global (keyed by domain / OSM id / Place id, else name + postcode) so runs share
+    crawls and evidence. Returns company ids in input order, without duplicates.
+    """
+    domains = {c.domain for c in companies if c.domain}
+    osm_ids = {c.osm_id for c in companies if c.osm_id}
+    place_ids = {c.place_id for c in companies if c.place_id}
+    names = {c.name for c in companies if not c.domain and c.postcode}
+    conds = []
+    if domains:
+        conds.append(models.Company.domain.in_(domains))
+    if osm_ids:
+        conds.append(models.Company.osm_id.in_(osm_ids))
+    if place_ids:
+        conds.append(models.Company.place_id.in_(place_ids))
+    if names:
+        conds.append(models.Company.name.in_(names))
+
+    async with db.sessionmaker()() as s:
+        existing = (
+            (await s.execute(select(models.Company).where(or_(*conds)))).scalars().all() if conds else []
+        )
+        by_domain = {e.domain: e for e in existing if e.domain}
+        by_osm = {e.osm_id: e for e in existing if e.osm_id}
+        by_place = {e.place_id: e for e in existing if e.place_id}
+        by_name_pc = {(e.name, e.postcode): e for e in existing if e.postcode}
+
+        rows: list[models.Company] = []
+        for c in companies:
+            row = (
+                (by_domain.get(c.domain) if c.domain else None)
+                or (by_osm.get(c.osm_id) if c.osm_id else None)
+                or (by_place.get(c.place_id) if c.place_id else None)
+                or (by_name_pc.get((c.name, c.postcode)) if not c.domain and c.postcode else None)
+            )
+            if row is None:
+                row = models.Company(
+                    **{k: v for k, v in _fields(c).items() if v is not None}, raw=_company_raw(c)
+                )
+                if not c.website:
+                    row.crawl_status = "no_site"
+                s.add(row)
+            else:
+                for k, v in _fields(c).items():
+                    if v is not None:
+                        setattr(row, k, v)
+                row.raw = {**(row.raw or {}), **_company_raw(c)}
+            # Register so a later input in this batch matches the same row.
+            if row.domain:
+                by_domain[row.domain] = row
+            if row.osm_id:
+                by_osm[row.osm_id] = row
+            if row.place_id:
+                by_place[row.place_id] = row
+            if row.postcode:
+                by_name_pc[(row.name, row.postcode)] = row
+            rows.append(row)
+        await s.flush()  # assigns ids to new rows
+        ids = list(dict.fromkeys(str(r.id) for r in rows))
+        await s.commit()
     return ids
 
 

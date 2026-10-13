@@ -14,7 +14,7 @@ export function ThesisScreen() {
       <div className="rounded-xl border bg-surface p-5 sm:p-6">
         <ThesisForm preset={preset} onPresetChange={setPreset} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-stretch">
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
         <CsvDrop preset={preset} />
         <Link
           href="/runs/demo"

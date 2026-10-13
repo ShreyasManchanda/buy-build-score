@@ -342,12 +342,13 @@ export function RunView({ runId }: { runId: string }) {
             aria-label="Selection actions"
             className="pointer-events-auto flex items-center gap-2 rounded-xl border bg-popover px-3 py-2 shadow-lg animate-row-in"
           >
-            <span className="px-1 text-sm">
+            <span className="px-1 text-sm whitespace-nowrap">
               <span className="font-mono tabular-nums">{selected.size}</span> selected
             </span>
             <Button size="sm" onClick={() => exportIds([...selected])} disabled={exporting}>
               {exporting ? <Loader2Icon className="animate-spin" /> : <DownloadIcon />}
-              Export CSV
+              <span className="sm:hidden">CSV</span>
+              <span className="hidden sm:inline">Export CSV</span>
             </Button>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -358,7 +359,7 @@ export function RunView({ runId }: { runId: string }) {
                     disabled={!health?.mode.hubspot}
                     onClick={() => pushHubspot([...selected])}
                   >
-                    <HubspotGlyph /> Push to HubSpot
+                    <HubspotGlyph /> <span className="hidden sm:inline">Push to</span> HubSpot
                   </Button>
                 </span>
               </TooltipTrigger>
