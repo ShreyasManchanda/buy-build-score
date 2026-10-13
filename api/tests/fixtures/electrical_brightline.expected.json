@@ -1,0 +1,28 @@
+{
+  "name": "Brightline Electric",
+  "meta": {"url": "https://brightlineelectric.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 210, "home_bytes": 2400},
+  "expect": {
+    "founded_year": 2022,
+    "copyright_year": 2026,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": true,
+    "people_named": [],
+    "tech_booking": ["ServiceTitan"],
+    "tech_chat": ["Intercom"],
+    "tech_analytics": ["GA4"],
+    "tech_cms": ["Wix"],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["instagram", "linkedin"],
+    "quote_form": true,
+    "has_form": true,
+    "tel_link": false,
+    "mailto_link": false
+  },
+  "scores": {
+    "upside_signals": [],
+    "succession_signals": []
+  }
+}

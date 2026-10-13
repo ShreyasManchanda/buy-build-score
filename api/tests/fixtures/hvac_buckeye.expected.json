@@ -1,0 +1,30 @@
+{
+  "name": "Buckeye Heating & Cooling",
+  "meta": {"url": "http://buckeyehvac.com/", "final_scheme": "http", "tls_ok": null, "ttfb_ms": 420, "home_bytes": 2100},
+  "expect": {
+    "founded_year": 1979,
+    "copyright_year": 2018,
+    "family_owned": true,
+    "exit_language": false,
+    "hiring": false,
+    "owner_name": "Dale Hoffman",
+    "people_named": ["Dale Hoffman"],
+    "tech_booking": [],
+    "tech_chat": [],
+    "tech_analytics": [],
+    "tech_legacy": ["Old jQuery"],
+    "mobile_viewport": false,
+    "https": false,
+    "social_links": [],
+    "quote_form": false,
+    "has_form": false,
+    "tel_link": true,
+    "mailto_link": false,
+    "table_layout": false
+  },
+  "scores": {
+    "upside_signals": ["no_booking_or_quote", "no_live_chat", "no_https", "not_mobile_ready", "outdated_stack",
+                       "no_analytics", "phone_only_cta", "no_social_links"],
+    "succession_signals": ["long_tenure", "founder_family_run", "single_leader", "stale_copyright", "not_hiring"]
+  }
+}

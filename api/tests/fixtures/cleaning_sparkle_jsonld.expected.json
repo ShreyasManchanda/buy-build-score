@@ -1,0 +1,30 @@
+{
+  "name": "Sparkle Home Cleaning",
+  "meta": {"url": "https://sparklehomecleaning.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 300, "home_bytes": 2000},
+  "expect": {
+    "founded_year": 2003,
+    "founded_method": "jsonld",
+    "copyright_year": 2025,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": true,
+    "owner_name": "Maria Lopez",
+    "people_named": ["Maria Lopez"],
+    "tech_booking": ["Acuity"],
+    "tech_chat": ["Crisp"],
+    "tech_analytics": [],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook", "nextdoor"],
+    "quote_form": false,
+    "has_form": false,
+    "tel_link": false,
+    "mailto_link": false,
+    "street_address": "220 W Johnstown Rd, Gahanna, OH, 43230"
+  },
+  "scores": {
+    "upside_signals": ["no_analytics"],
+    "succession_signals": ["long_tenure", "single_leader"]
+  }
+}

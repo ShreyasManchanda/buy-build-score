@@ -1,0 +1,28 @@
+{
+  "name": "Summit Roofing & Gutters",
+  "meta": {"url": "https://summitroofingoh.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 700, "home_bytes": 1800},
+  "expect": {
+    "founded_year": 1987,
+    "copyright_year": 2015,
+    "family_owned": false,
+    "exit_language": true,
+    "hiring": false,
+    "people_named": [],
+    "tech_booking": [],
+    "tech_chat": [],
+    "tech_analytics": ["Universal Analytics"],
+    "tech_legacy": ["Old Bootstrap"],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": [],
+    "quote_form": false,
+    "has_form": false,
+    "tel_link": true,
+    "mailto_link": true,
+    "email": "owner@summitroofingoh.com"
+  },
+  "scores": {
+    "upside_signals": ["no_booking_or_quote", "no_live_chat", "outdated_stack", "no_social_links"],
+    "succession_signals": ["long_tenure", "stale_copyright", "not_hiring", "exit_language"]
+  }
+}

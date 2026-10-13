@@ -1,0 +1,29 @@
+{
+  "name": "Oakwood Animal Hospital",
+  "meta": {"url": "https://oakwoodanimalhospital.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 260, "home_bytes": 1500},
+  "expect": {
+    "founded_year": 1988,
+    "founded_method": "regex_since",
+    "copyright_year": 2026,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": false,
+    "people_named": ["Sam Patel", "Ana Ruiz"],
+    "tech_booking": ["SimplyBook"],
+    "tech_chat": [],
+    "tech_analytics": ["Plausible"],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook"],
+    "quote_form": false,
+    "has_form": false,
+    "tel_link": true,
+    "mailto_link": true,
+    "email": "frontdesk@oakwoodanimalhospital.com"
+  },
+  "scores": {
+    "upside_signals": ["no_live_chat"],
+    "succession_signals": ["long_tenure", "not_hiring"]
+  }
+}

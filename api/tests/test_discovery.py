@@ -48,7 +48,7 @@ def test_overpass_fixture_parses_into_companies() -> None:
 
 def test_overpass_query_uses_tags_and_name_regex() -> None:
     q = osm.build_query("HVAC contractors", GEO, radius_km=40, limit=60)
-    assert '[out:json][timeout:25];' in q
+    assert "[out:json][timeout:25];" in q
     assert 'nwr["craft"="hvac"](around:40000,39.961200,-82.998800);' in q
     assert 'nwr["name"~"hvac|heating|air ?condition|furnace|mechanical",i]["website"]' in q
     assert q.rstrip().endswith("out center tags 180;")
@@ -79,10 +79,20 @@ def test_name_only_match_with_other_category_is_dropped() -> None:
     payload = {
         "elements": [
             {"type": "node", "id": 1, "tags": {"name": "Joe's Auto Repair", "shop": "car_repair"}},
-            {"type": "node", "id": 2, "tags": {"name": "Cheap Auto Insurance", "office": "insurance",
-                                                "website": "https://x.example"}},
-            {"type": "node", "id": 3, "tags": {"name": "Pins Mechanical", "amenity": "bar",
-                                                "website": "https://pins.example"}},
+            {
+                "type": "node",
+                "id": 2,
+                "tags": {
+                    "name": "Cheap Auto Insurance",
+                    "office": "insurance",
+                    "website": "https://x.example",
+                },
+            },
+            {
+                "type": "node",
+                "id": 3,
+                "tags": {"name": "Pins Mechanical", "amenity": "bar", "website": "https://pins.example"},
+            },
             {"type": "node", "id": 4, "tags": {"name": "Ace Automotive", "website": "https://ace.example"}},
         ]
     }

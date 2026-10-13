@@ -73,22 +73,22 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
 
 ## M3 — Extractors + scoring (1:30–2:45)
 
-- [ ] One pure function per signal in `extractors/`:
+- [x] One pure function per signal in `extractors/`:
   - `founded_year` (JSON-LD, regex, OSM `start_date`)
   - `copyright_year` (footer region)
   - `family_owned`, `exit_language`, `hiring` (with the negation guard)
   - `people_named` (regex on "Owner|President|Founder|Principal[:,–-] Name")
   - `tech_fingerprints` (from `fingerprints.yaml`)
   - `mobile_viewport`, `https`, `ttfb`/`page_bytes`, `social_links`, `tel_only_cta`, `quote_form`, `table_layout`
-- [ ] `pipeline/score.py`:
+- [x] `pipeline/score.py`:
   - load `scoring.yaml`; compute the three sub-scores with confidence weighting and OSM-mode re-normalization
   - compute coverage; apply guardrails
   - return evidence rows with dimension, signal, value, points, confidence, source_url, snippet, extractor
-- [ ] `integrations/llm.py`:
+- [x] `integrations/llm.py`:
   - batched extraction per `prompts/extract.md`, Gemini then Groq fallback
   - run the quote guard; cache results
   - call it only for companies still missing `owner_name` or `founded_year` after rules
-- [ ] Fixtures: at least 10 realistic SMB homepages in `api/tests/fixtures/`, each with a `.expected.json` listing the expected evidence signals. Cover:
+- [x] Fixtures: at least 10 realistic SMB homepages in `api/tests/fixtures/`, each with a `.expected.json` listing the expected evidence signals. Cover:
   - stale copyright (2018)
   - "family owned since 1979"
   - "owner is retiring" (and one "not for sale" negation)
@@ -99,7 +99,7 @@ Target total: about 5 hours. If you're past 4:30, jump to M8 and apply the SPEC 
   - http-only
   - jQuery 1.12
   - phone-only CTA
-- [ ] Tests:
+- [x] Tests:
   - every fixture's expected signals are found
   - scoring math: caps, durability floor, thin-data cap, OSM re-normalization, preset weights
   - the LLM guard rejects an ungrounded quote and a hallucinated owner

@@ -1,0 +1,31 @@
+{
+  "name": "Kessler & Sons Mechanical",
+  "meta": {"url": "http://kesslermechanical.com/", "final_scheme": "http", "tls_ok": false, "ttfb_ms": 2300, "home_bytes": 1900},
+  "expect": {
+    "founded_year": 1965,
+    "founded_method": "regex_since",
+    "copyright_year": 2009,
+    "family_owned": true,
+    "exit_language": false,
+    "hiring": false,
+    "people_named": [],
+    "tech_booking": [],
+    "tech_chat": [],
+    "tech_analytics": [],
+    "tech_legacy": ["Flash"],
+    "table_layout": true,
+    "mobile_viewport": false,
+    "https": false,
+    "social_links": [],
+    "quote_form": false,
+    "has_form": false,
+    "tel_link": true,
+    "mailto_link": true,
+    "email": "kesslermech@aol.com"
+  },
+  "scores": {
+    "upside_signals": ["no_booking_or_quote", "slow_site", "no_live_chat", "no_https", "not_mobile_ready",
+                       "outdated_stack", "no_analytics", "no_social_links"],
+    "succession_signals": ["long_tenure", "founder_family_run", "stale_copyright", "not_hiring"]
+  }
+}

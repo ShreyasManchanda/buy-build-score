@@ -1,0 +1,29 @@
+{
+  "name": "Stauffer Family Dental",
+  "meta": {"url": "https://staufferfamilydental.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 1850, "home_bytes": 2500},
+  "expect": {
+    "founded_year": 1998,
+    "copyright_year": 2024,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": false,
+    "owner_name": "Heidi Stauffer",
+    "people_named": ["Heidi Stauffer"],
+    "has_team_page": false,
+    "tech_booking": ["Zocdoc"],
+    "tech_chat": ["Podium"],
+    "tech_analytics": [],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook", "instagram"],
+    "quote_form": true,
+    "has_form": true,
+    "tel_link": true,
+    "mailto_link": false
+  },
+  "scores": {
+    "upside_signals": ["slow_site", "no_analytics"],
+    "succession_signals": ["long_tenure", "founder_family_run", "single_leader", "stale_copyright", "not_hiring"]
+  }
+}

@@ -46,7 +46,7 @@ extend-exclude = ["alembic/versions"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
-ignore = ["RUF001", "RUF002", "RUF003", "B008"]
+ignore = ["RUF001", "RUF002", "RUF003", "B008", "E501"]  # line length is the formatter's job
 
 [tool.mypy]
 python_version = "3.12"

@@ -38,3 +38,21 @@ Ambiguities resolved during the build. One line each: what, why.
 - **Page buckets**: about/our-story/history → team/staff/leadership → contact → careers/jobs; one page per bucket, top 3, path matches beat anchor-text matches, shallow paths win.
 - **DNS-rebinding window accepted.** The SSRF guard resolves and checks every hop, but httpx resolves again on connect; closing that TOCTOU gap needs a pinned-IP transport, noted as production hardening.
 - **JS-rendered sites** are flagged (`js_rendered`) but not re-fetched with Playwright (P2 per SPEC; doesn't fit the free function).
+
+## M3 — Extractors + scoring + LLM
+
+- **Evidence rows only for the 20 scoring signals.** Informational facts (people list, tech stack, services, email, owner title/source) live in `companies.raw` and show in the drawer, so `UNIQUE(company_id, signal)` holds.
+- **"Known" vs "missing" (coverage).** Text-absence signals (family, exit, hiring, single leader) and all upside signals are *known* once we've read ≥1 page — "checked and not found" is a fact. `founded_year` and `copyright_year` are known only when found. Places-only signals are excluded from the denominator in OSM/CSV mode (20 → 17).
+- **Absent capabilities still get an evidence row** (0 points, e.g. "Online booking: Calendly"), so the drawer shows why a lead did *not* earn upside points.
+- **Founding-year precedence:** schema.org `foundingDate` > strong text ("founded/established/est./serving … since") > bare "since" > OSM `start_date` > LLM. "40 years of experience" is never converted to a year (it's often the owner's career, not the business).
+- **Exit-language guard** (beyond SPEC's negations): matches followed by "planning/plan/community" are services ("retirement planning", "business succession planning"), not exits. Matches are extended to word end first ("retire" inside "retirement").
+- **Negation guard** also treats a preceding "no" as negation ("no job openings").
+- **People regex is case-sensitive for names** (only titles ignore case) and never spans block elements; page text keeps one line per block so "A note from Tom" + "Tom Reilly, owner" isn't read as "Tom Tom Reilly".
+- **Owner = an owner-type title, or a lone "Dr."** (solo practice). Two doctors and no owner title → owner unknown, never guessed.
+- **"Owner surname in business name"** compares against the normalised name tokens ("Petty's Auto Service" → `petty`).
+- **Operating, fixed location in OSM/CSV mode** accepts a street address from OSM *or* the site's schema.org `PostalAddress`; evidence links the OSM object or the page.
+- **Rounding is half-up everywhere** (`floor(x+0.5)`) so Python and the browser's `Math.round` agree on every composite.
+- **LLM grounding is strict:** every non-null field — including each `services` item and `owner_title` — must appear in `evidence_quote`, and the quote must be a substring of the input (whitespace/case-normalised). Page text has `<company` delimiters neutralised before it's sent.
+- **Groq model default → `openai/gpt-oss-120b`.** `llama-3.3-70b-versatile` returns 404 (retired); verified with one live call that gpt-oss-120b returns grounded JSON and ignores an injected instruction.
+- **LLM circuit breaker.** On 2026-10-13 `gemini-flash-latest` returned 503 and timeouts for this key; a failed provider is skipped for 5 minutes so a run doesn't pay a 40 s timeout per batch. A missing key isn't treated as an outage.
+- **LLM cache is per company input** (sha256 of models + prompt + name + text), not per batch, so batch composition doesn't defeat the cache.

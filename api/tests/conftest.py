@@ -14,12 +14,16 @@ FIXTURES = Path(__file__).parent / "fixtures"
 @pytest.fixture(autouse=True)
 def _memory_cache(request: pytest.FixtureRequest) -> Iterator[None]:
     """Unit tests never touch Postgres through the cache unless marked `db`."""
+    from app.integrations import llm
+
     cache.clear_memory()
+    llm._down_until.clear()
     if request.node.get_closest_marker("db") is None:
         cache.disable_db()
     yield
     cache.enable_db()
     cache.clear_memory()
+    llm._down_until.clear()
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:

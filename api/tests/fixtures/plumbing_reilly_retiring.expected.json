@@ -1,0 +1,31 @@
+{
+  "name": "Reilly Plumbing Co.",
+  "meta": {"url": "https://reillyplumbing.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 180, "home_bytes": 3400},
+  "expect": {
+    "founded_year": 1972,
+    "founded_method": "jsonld",
+    "copyright_year": 2026,
+    "family_owned": false,
+    "exit_language": true,
+    "hiring": false,
+    "owner_name": "Tom Reilly",
+    "people_named": ["Tom Reilly"],
+    "tech_booking": ["Calendly"],
+    "tech_chat": [],
+    "tech_analytics": ["GA4"],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook", "yelp"],
+    "quote_form": false,
+    "has_form": true,
+    "tel_link": true,
+    "mailto_link": true,
+    "email": "office@reillyplumbing.com",
+    "street_address": "88 E Hudson St, Columbus, OH, 43202"
+  },
+  "scores": {
+    "upside_signals": ["no_live_chat"],
+    "succession_signals": ["long_tenure", "founder_family_run", "single_leader", "not_hiring", "exit_language"]
+  }
+}

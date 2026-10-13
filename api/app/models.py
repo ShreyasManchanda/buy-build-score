@@ -150,9 +150,7 @@ class Lead(Base):
 class Evidence(Base):
     __tablename__ = "evidence"
     __table_args__ = (
-        CheckConstraint(
-            "dimension IN ('durability','succession','upside')", name="evidence_dimension_check"
-        ),
+        CheckConstraint("dimension IN ('durability','succession','upside')", name="evidence_dimension_check"),
         CheckConstraint(
             "extractor IN ('rule','llm','places','osm','whois','http')", name="evidence_extractor_check"
         ),

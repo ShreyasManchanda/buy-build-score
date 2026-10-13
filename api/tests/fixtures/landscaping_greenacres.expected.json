@@ -1,0 +1,29 @@
+{
+  "name": "Green Acres Lawn & Landscape",
+  "meta": {"url": "https://greenacreslawn.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 650, "home_bytes": 3100},
+  "expect": {
+    "founded_year": 1994,
+    "copyright_year": 2023,
+    "family_owned": true,
+    "exit_language": false,
+    "hiring": true,
+    "people_named": [],
+    "tech_booking": [],
+    "tech_chat": ["Tidio"],
+    "tech_analytics": ["Meta Pixel"],
+    "tech_cms": ["WordPress"],
+    "tech_legacy": [],
+    "wordpress_outdated": true,
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook", "instagram"],
+    "quote_form": true,
+    "has_form": true,
+    "tel_link": false,
+    "mailto_link": false
+  },
+  "scores": {
+    "upside_signals": ["outdated_stack"],
+    "succession_signals": ["long_tenure", "founder_family_run", "stale_copyright"]
+  }
+}

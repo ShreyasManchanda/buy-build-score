@@ -109,28 +109,28 @@ def parse(payload: dict[str, Any], limit: int, industry: str | None = None) -> l
         region_line = f"{region or ''} {postcode or ''}".strip()
         address = ", ".join(p for p in (street, city, region_line) if p) or None
         company = CompanyIn(
-                name=name,
-                website=_website(tags),
-                phone=tags.get("phone") or tags.get("contact:phone"),
-                email=tags.get("email") or tags.get("contact:email"),
-                address=address,
-                city=city,
-                region=region,
-                postcode=postcode,
-                country=tags.get("addr:country"),
-                lat=lat,
-                lng=lng,
-                osm_id=osm_id,
-                start_date=_year(tags.get("start_date")),
-                source="osm",
-                raw={
-                    "brand": tags.get("brand") or tags.get("brand:wikidata"),
-                    "osm_street": street or None,
-                    "opening_hours": tags.get("opening_hours"),
-                    "start_date_raw": tags.get("start_date"),
-                    "matched_by": "tag" if by_tag else "name",
-                },
-            )
+            name=name,
+            website=_website(tags),
+            phone=tags.get("phone") or tags.get("contact:phone"),
+            email=tags.get("email") or tags.get("contact:email"),
+            address=address,
+            city=city,
+            region=region,
+            postcode=postcode,
+            country=tags.get("addr:country"),
+            lat=lat,
+            lng=lng,
+            osm_id=osm_id,
+            start_date=_year(tags.get("start_date")),
+            source="osm",
+            raw={
+                "brand": tags.get("brand") or tags.get("brand:wikidata"),
+                "osm_street": street or None,
+                "opening_hours": tags.get("opening_hours"),
+                "start_date_raw": tags.get("start_date"),
+                "matched_by": "tag" if by_tag else "name",
+            },
+        )
         out.append((by_tag, company))
     # Website first (we can only score what we can read), then tag matches, stable otherwise.
     out.sort(key=lambda pair: (pair[1].website is None, not pair[0]))

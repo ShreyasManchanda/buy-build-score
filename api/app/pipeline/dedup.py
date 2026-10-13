@@ -39,9 +39,22 @@ NOT_A_WEBSITE = (
 )
 
 _SUFFIXES = {
-    "llc", "l l c", "inc", "incorporated", "co", "corp", "corporation", "company", "ltd", "limited",
-    "pllc", "pc", "lp", "llp", "the",
-}  # fmt: skip
+    "llc",
+    "l l c",
+    "inc",
+    "incorporated",
+    "co",
+    "corp",
+    "corporation",
+    "company",
+    "ltd",
+    "limited",
+    "pllc",
+    "pc",
+    "lp",
+    "llp",
+    "the",
+}
 
 
 def normalize_domain(url: str | None) -> str | None:
@@ -120,9 +133,19 @@ def normalize(c: CompanyIn, default_region: str | None = "US") -> CompanyIn:
 
 def _completeness(c: CompanyIn) -> int:
     fields = (
-        c.website, c.phone_e164, c.address, c.city, c.region, c.postcode, c.lat, c.rating,
-        c.review_count, c.email, c.start_date, c.place_id,
-    )  # fmt: skip
+        c.website,
+        c.phone_e164,
+        c.address,
+        c.city,
+        c.region,
+        c.postcode,
+        c.lat,
+        c.rating,
+        c.review_count,
+        c.email,
+        c.start_date,
+        c.place_id,
+    )
     return sum(v is not None for v in fields)
 
 

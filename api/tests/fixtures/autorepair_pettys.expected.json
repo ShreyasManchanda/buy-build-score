@@ -1,0 +1,29 @@
+{
+  "name": "Petty's Auto Service",
+  "meta": {"url": "https://pettysauto.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 390, "home_bytes": 2900},
+  "expect": {
+    "founded_year": 2004,
+    "copyright_year": 2026,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": true,
+    "owner_name": "Mike Petty",
+    "people_named": ["Mike Petty"],
+    "has_team_page": true,
+    "tech_booking": ["Square Appointments"],
+    "tech_chat": [],
+    "tech_analytics": ["GA4", "Google Tag Manager"],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["facebook"],
+    "quote_form": false,
+    "has_form": true,
+    "tel_link": true,
+    "mailto_link": false
+  },
+  "scores": {
+    "upside_signals": ["no_live_chat"],
+    "succession_signals": ["long_tenure", "founder_family_run"]
+  }
+}

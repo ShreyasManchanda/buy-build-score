@@ -13,9 +13,7 @@ PROBLEM = "application/problem+json"
 
 
 class Problem(Exception):
-    def __init__(
-        self, status: int, title: str, detail: str | None = None, **extra: Any
-    ) -> None:
+    def __init__(self, status: int, title: str, detail: str | None = None, **extra: Any) -> None:
         super().__init__(detail or title)
         self.status = status
         self.title = title

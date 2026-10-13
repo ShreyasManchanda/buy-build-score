@@ -218,9 +218,7 @@ class _Resp:
     nbytes: int
 
 
-async def _get(
-    c: httpx.AsyncClient, throttle: net.HostThrottle, url: str, accept_any: bool = False
-) -> _Resp:
+async def _get(c: httpx.AsyncClient, throttle: net.HostThrottle, url: str, accept_any: bool = False) -> _Resp:
     """GET with manual redirects (SSRF-checked per hop), retries, size + type limits."""
     for _ in range(MAX_REDIRECTS + 1):
         await net.assert_public_url(url)

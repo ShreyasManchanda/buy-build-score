@@ -1,0 +1,29 @@
+{
+  "name": "Doe & Associates CPA",
+  "meta": {"url": "https://doecpa.com/", "final_scheme": "https", "tls_ok": true, "ttfb_ms": 240, "home_bytes": 1700},
+  "expect": {
+    "founded_year": 1991,
+    "copyright_year": 2026,
+    "family_owned": false,
+    "exit_language": false,
+    "hiring": false,
+    "owner_name": "Jane Doe",
+    "people_named": ["Jane Doe"],
+    "tech_booking": [],
+    "tech_chat": [],
+    "tech_analytics": ["Google Tag Manager"],
+    "tech_legacy": [],
+    "mobile_viewport": true,
+    "https": true,
+    "social_links": ["linkedin"],
+    "quote_form": true,
+    "has_form": true,
+    "tel_link": true,
+    "mailto_link": true,
+    "email": "jane@doecpa.com"
+  },
+  "scores": {
+    "upside_signals": ["no_live_chat"],
+    "succession_signals": ["long_tenure", "founder_family_run", "single_leader", "not_hiring"]
+  }
+}
