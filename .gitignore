@@ -23,3 +23,13 @@ skills-lock.json
 
 .vercel/
 .DS_Store
+
+# local-only notes (not part of the submission)
+CLAUDE.md
+DEMO_SCRIPT.md
+KICKOFF_PROMPT.md
+SPEC.md
+TASKS.md
+web/AGENTS.md
+web/CLAUDE.md
+web/README.md
