@@ -104,6 +104,28 @@ def test_copyright_range_takes_last_year() -> None:
     assert facts["copyright_year"].value == 2017
 
 
+def test_schema_person_needs_a_role_to_count_as_a_leader() -> None:
+    """Live bug: a schema.org Person on a careers page (no jobTitle) was taken as the owner."""
+    import json as _json
+
+    def page(obj: object) -> Pages:
+        tag = f'<script type="application/ld+json">{_json.dumps(obj)}</script><p>Welcome.</p>'
+        return Pages([PageView("https://x.com/careers", "careers", tag)])
+
+    bare = run_all(page({"@type": "Person", "name": "Gabriel Oscar"}), current_year=2026)
+    assert bare["people_named"].value == [] and "owner_name" not in bare
+    staff = run_all(
+        page({"@type": "Person", "name": "Ann Lee", "jobTitle": "Office Manager"}), current_year=2026
+    )
+    assert "owner_name" not in staff
+    owner = run_all(page({"@type": "Person", "name": "Ann Lee", "jobTitle": "Owner"}), current_year=2026)
+    assert owner["owner_name"].value == "Ann Lee"
+    founder = run_all(
+        page({"@type": "Plumber", "name": "Lee Plumbing", "founder": "Rod Yoder"}), current_year=2026
+    )
+    assert founder["owner_name"].value == "Rod Yoder" and founder["owner_name"].extra["title"] == "founder"
+
+
 def test_people_regex_ignores_business_words() -> None:
     html = "<p>Owner: Columbus Heating Services. President - Ann Marie Walsh.</p>"
     facts = run_all(Pages([PageView("https://x.com/", "home", html)]), current_year=2026)

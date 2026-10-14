@@ -163,12 +163,24 @@ def people(pages: Pages) -> list[Evidence]:
             found[name.lower()] = {"name": name, "title": title, "url": url, "snippet": snip}
 
     for p in pages.pages:
+        # schema.org people count only when the markup says who they are to the business:
+        # an organisation's `founder`, or a Person whose jobTitle is an owner-type title.
+        # A bare Person (review author, recruiter, staff member on a careers page) is not a leader.
         for obj in jsonld.objects(p):
-            t = str(obj.get("@type", ""))
-            if t == "Person" and isinstance(obj.get("name"), str) and _ok_name(obj["name"]):
-                title = _title_norm(str(obj.get("jobTitle") or "owner").split()[0])
-                title = title if title in TITLE_RANK else "owner"
-                add(obj["name"], title, p.url, f"schema.org Person: {obj['name']}")
+            founders = obj.get("founder")
+            for f in founders if isinstance(founders, list) else [founders]:
+                fname = f.get("name") if isinstance(f, dict) else f
+                if isinstance(fname, str) and _ok_name(fname):
+                    add(fname, "founder", p.url, f"schema.org founder: {fname}")
+            if (
+                str(obj.get("@type", "")) == "Person"
+                and isinstance(obj.get("name"), str)
+                and _ok_name(obj["name"])
+            ):
+                job = str(obj.get("jobTitle") or "")
+                title = _title_norm(job.split()[0]) if job else ""
+                if title in TITLE_RANK and title != "dr.":
+                    add(obj["name"], title, p.url, f"schema.org Person: {obj['name']}, {job}")
         text = p.text
         for pat in _PATTERNS:
             for m in pat.finditer(text):

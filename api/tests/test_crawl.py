@@ -206,6 +206,45 @@ async def test_full_crawl_ok_caches_and_reuses(monkeypatch: pytest.MonkeyPatch) 
 
 
 @respx.mock
+async def test_time_budget_keeps_pages_already_read(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A slow subpage must not erase the homepage we already read (live bug: 11 parallel sites)."""
+    import asyncio
+
+    monkeypatch.setattr(crawl, "DOMAIN_BUDGET_S", 0.5)
+    respx.get("https://slowsub.com/robots.txt").mock(return_value=httpx.Response(404))
+    respx.get("https://slowsub.com/").mock(
+        return_value=html(HOME.replace("reillyplumbing.com", "slowsub.com"))
+    )
+
+    async def slow(_: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(5)
+        return html(PAGE.format("late"))
+
+    respx.route(host="slowsub.com").mock(side_effect=slow)
+    async with Crawler(per_host_interval=0) as c:
+        res = await c.crawl("https://slowsub.com/", use_cache=False)
+    assert res.status == "partial" and [p.kind for p in res.pages] == ["home"]
+    assert "time budget" in (res.error or "")
+
+
+@respx.mock
+async def test_slow_homepage_is_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    monkeypatch.setattr(crawl, "DOMAIN_BUDGET_S", 0.3)
+    respx.get("https://slowhome.com/robots.txt").mock(return_value=httpx.Response(404))
+
+    async def slow(_: httpx.Request) -> httpx.Response:
+        await asyncio.sleep(5)
+        return html("<p>late</p>")
+
+    respx.get("https://slowhome.com/").mock(side_effect=slow)
+    async with Crawler(per_host_interval=0) as c:
+        res = await c.crawl("https://slowhome.com/", use_cache=False)
+    assert res.status == "unreachable" and res.pages == [] and res.error == "timeout"
+
+
+@respx.mock
 async def test_retries_on_503_then_succeeds() -> None:
     respx.get("https://retry.com/robots.txt").mock(return_value=httpx.Response(404))
     respx.get("https://retry.com/").mock(side_effect=[httpx.Response(503), html("<p>ok</p>")])

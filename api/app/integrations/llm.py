@@ -289,8 +289,8 @@ class LlmBatcher:
 
     async def _run(self, batch: list[tuple[LlmRequest, asyncio.Future[LlmFacts | None]]]) -> None:
         try:
-            self.calls += 1
             out = await extract_batch([r for r, _ in batch])
+            self.calls += 1  # successful answers only: "N LLM calls" in the UI must not count failures
         except Exception as e:
             log.warning("LLM disabled for the rest of this run: %s", e)
             self.disabled = True

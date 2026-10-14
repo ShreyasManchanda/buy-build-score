@@ -313,18 +313,27 @@ class Crawler:
             hit = await cache.get(key)
             if hit:
                 return CrawlResult.from_cache(hit)
+        start = website if re.match(r"^https?://", website, re.I) else f"http://{website}"
+        # _crawl fills this object as it goes, so a timeout keeps whatever was already read.
+        result = CrawlResult(domain=domain, status="unreachable", start_url=start)
         async with self.sem:
             try:
-                result = await asyncio.wait_for(self._crawl(website, domain), DOMAIN_BUDGET_S)
+                await asyncio.wait_for(self._crawl(result), DOMAIN_BUDGET_S)
             except TimeoutError:
-                result = CrawlResult(domain=domain, status="unreachable", start_url=website, error="timeout")
+                if result.home is not None:
+                    # The homepage was read; slow subpages shouldn't erase it. Score what we have.
+                    result.status = "partial"
+                    result.total_bytes = sum(p.bytes for p in result.pages)
+                    result.error = f"time budget hit after {len(result.pages)} page(s)"
+                else:
+                    result.status = "unreachable"
+                    result.error = "timeout"
         if result.status in ("ok", "partial", "blocked_robots"):
             await cache.set(key, result.to_cache(), cache.TTL["crawl"])
         return result
 
-    async def _crawl(self, website: str, domain: str) -> CrawlResult:
-        start = website if re.match(r"^https?://", website, re.I) else f"http://{website}"
-        result = CrawlResult(domain=domain, status="unreachable", start_url=start)
+    async def _crawl(self, result: CrawlResult) -> CrawlResult:
+        start = result.start_url or ""
         origin = "{0.scheme}://{0.netloc}".format(urlsplit(start))
         try:
             await net.assert_public_url(start)

@@ -119,11 +119,20 @@ Tested end to end in Chrome against `next start` + uvicorn + Neon: landing parse
 - Copy: "1 LLM calls" → "1 LLM call"; the demo card no longer stretches next to the CSV preview.
 - `API_PROXY_ORIGIN` (build-time, opt-in) lets a production build proxy `/api` to a local API for testing; never set on Vercel.
 
+## Brave test, local DB (2026-10-14)
+
+The network blocked outbound port 5432 (Neon unreachable; port 443 fine), so this pass ran against the docker-compose Postgres. Two more real bugs found by watching live runs:
+
+- **A crawl timeout threw away pages already read.** With 11 sites crawling at once, R & T Yoder HVAC (fine alone in 12 s) hit the 25 s per-site budget mid-subpages and was scored "unreachable" with nothing. The crawler now fills one result object as it goes: if the homepage was read, a timeout returns `partial` with the pages it has. Same HVAC run after the fix: Yoder → B 53, HHR crawled, whole run 18 s.
+- **A bare schema.org `Person` became "the owner".** "Gabriel Oscar", marked up on Yoder's *careers* page with no role, was credited as owner and single leader (+13.5) while the about page says the company "was founded in 2004 by Rod and T…". JSON-LD people now count only as an organisation's `founder` or with an owner-type `jobTitle`.
+- **Demo regenerated** with both fixes (same thesis, local DB): 0 bare-Person owners; 7 owners, all from the sites' own text. Gemini (503/timeouts) and Groq (free-tier rate limit) were both unavailable, so this demo has no LLM gap-fills — re-run `scripts/export_demo.py` on a fresh run once Groq's limit resets to restore owners like Fixari's.
+- **"N LLM calls" counted failed attempts**; it now counts successful answers only (demo counts corrected to 0).
+
 ## SPEC acceptance criteria — status
 
 | Criterion | Status |
 | --- | --- |
-| Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 5 B / 54 C — OSM dental data is thin (29 listings without a website). |
+| Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 4 B / 55 C — OSM dental data is thin (29 listings without a website). |
 | Live 60-business run ≤ 90 s, first row ≤ 10 s | ⚠️ Not verified in production. Locally (India → Neon Ohio, ~0.3 s per DB round-trip) a 59-lead run took 163 s with the first row at 85 s, dominated by busy public Overpass servers. Needs a measurement on Vercel `cle1`. |
 | Every A-tier lead has ≥ 1 evidence item with a working source link per sub-score | ✅ by construction: every known signal (including 0-point ones) is an evidence row with a source URL (asserted in tests); A requires durability ≥ 30, so durability always has evidence. |
 | Slider re-ranks < 100 ms, no network | ✅ pure in-browser re-rank (`lib/score.ts`); vitest re-ranks 500 leads well under 100 ms. |
