@@ -132,8 +132,8 @@ The network blocked outbound port 5432 (Neon unreachable; port 443 fine), so thi
 
 | Criterion | Status |
 | --- | --- |
-| Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 4 B / 55 C — OSM dental data is thin (29 listings without a website). |
-| Live 60-business run ≤ 90 s, first row ≤ 10 s | ⚠️ Not verified in production. Locally (India → Neon Ohio, ~0.3 s per DB round-trip) a 59-lead run took 163 s with the first row at 85 s, dominated by busy public Overpass servers. Needs a measurement on Vercel `cle1`. |
+| Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 5 B / 54 C — OSM dental data is thin (29 listings without a website) and A needs a rare combination of signals; auto repair (also tried) tops out at B 64. Thresholds were not tuned to manufacture an A. |
+| Live 60-business run ≤ 90 s, first row ≤ 10 s | ⚠️ Partly. From India against Neon (Ohio, ~0.3 s per DB round-trip): cold run 163 s (first row 85 s, dominated by busy public Overpass servers); with Overpass + crawls cached, 59 leads in 27–57 s with the first row at ~13 s. The < 90 s cold target depends on Overpass being responsive; still unmeasured on Vercel `cle1`. |
 | Every A-tier lead has ≥ 1 evidence item with a working source link per sub-score | ✅ by construction: every known signal (including 0-point ones) is an evidence row with a source URL (asserted in tests); A requires durability ≥ 30, so durability always has evidence. |
 | Slider re-ranks < 100 ms, no network | ✅ pure in-browser re-rank (`lib/score.ts`); vitest re-ranks 500 leads well under 100 ms. |
 | SaaSquatch CSV upload maps headers and scores rows | ✅ client preview + server mapping, tested (25-row file, 6 duplicates → 19). |

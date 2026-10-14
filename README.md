@@ -4,7 +4,7 @@
 
 Buy & Build Score is a sourcing add-on for [SaaSquatch Leads](https://saasquatchleads.com). Give it an industry and a city (or your SaaSquatch CSV export) and it finds owner-operated small businesses, reads their public websites politely, and ranks them as acquisition targets on three explainable sub-scores: **Durability** (will it last?), **Succession likelihood** (might the owner sell?) and **Digital upside gap** (how much can a buyer improve, fast?). Every point links to the page, snippet or API field that earned it; a signal we can't find scores zero and lowers coverage instead of being guessed. It sits between SaaSquatch's Discover and Enrich steps, so enrichment credits (~$0.39 each on Silver) go only to the leads worth a call — and the whole thing runs on free tiers for $0.
 
-> **Screenshot / GIF:** _add `docs/screenshot.png` (run screen with the lead drawer open) before submitting — see "Manual steps" below._
+![Buy & Build Score: ranked leads with the evidence drawer open](docs/screenshot.jpg)
 
 - **Live demo:** `https://<your-vercel-app>.vercel.app/runs/demo` (no keys needed)
 - **API docs:** `https://<your-vercel-app>.vercel.app/api/v1/docs`
@@ -93,7 +93,7 @@ Three additive sub-scores, each 0–100, from observable signals only. Points ar
 
 | | Result |
 | --- | --- |
-| Tests | 134 API unit tests (11 hand-written SMB fixtures with expected evidence, scoring math, dedup, crawler/SSRF/robots, LLM guard, HubSpot payload, PageSpeed) + 6 Postgres integration tests (SSE order, persistence, replay, ranked list, CSV, demo, rate limit) + 11 vitest |
+| Tests | 142 API unit tests (11 hand-written SMB fixtures with expected evidence, scoring math, dedup, crawler/SSRF/robots, LLM guard, HubSpot payload, PageSpeed) + 6 Postgres integration tests (SSE order, persistence, replay, ranked list, CSV, demo, rate limit) + 11 vitest |
 | Demo run | Dental, Columbus OH: 60 discovered → 7 chains dropped → 59 scored in 163 s (from India against Neon in Ohio; Vercel in `cle1` is next door) |
 | Live auto-repair run | 20 discovered → 19 scored, done in 140 s; B-tier: Joe's Service Station (since 1948, family-owned), Brown's Alignment (1981, family-owned), C.A.R.S @ Polaris (1962) |
 | Tier-A precision | _TODO: hand-label 30 demo leads A/B/C and report agreement here._ |
