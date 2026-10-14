@@ -110,6 +110,27 @@ async def test_overpass_all_down_raises_friendly_error(monkeypatch: pytest.Monke
         await osm.fetch("q")
 
 
+def test_garbage_website_tags_are_cleaned() -> None:
+    """Live bug: OSM website tag "http://<private-use glyph>\\nexample.com" crashed the crawler."""
+    payload = {
+        "elements": [
+            {
+                "type": "node",
+                "id": 7,
+                "tags": {
+                    "name": "Dr. Schen",
+                    "healthcare": "dentist",
+                    "website": "http://\nhudsonfamilydental.pro",
+                },
+            }
+        ]
+    }
+    (c,) = osm.parse(payload, 60, "dental")
+    assert c.website == "http://hudsonfamilydental.pro"
+    assert dedup.clean_url(" https://a.com/x y​ ") == "https://a.com/xy"
+    assert dedup.clean_url("\n") is None
+
+
 def test_name_only_match_with_other_category_is_dropped() -> None:
     payload = {
         "elements": [

@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from app import cache, configs, net
+from app.pipeline.dedup import clean_url
 from app.schemas import CompanyIn, GeoPoint
 
 log = logging.getLogger(__name__)
@@ -56,7 +57,9 @@ def _website(tags: dict[str, str]) -> str | None:
     url = tags.get("website") or tags.get("contact:website") or tags.get("url")
     if not url:
         return None
-    url = url.strip().split(";")[0].strip()
+    url = clean_url(url.strip().split(";")[0])
+    if not url:
+        return None
     if not re.match(r"^https?://", url, re.I):
         url = "http://" + url
     return url

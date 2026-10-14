@@ -8,6 +8,7 @@ row, fills gaps from the others, and lists the absorbed rows in `merged_from`.
 from __future__ import annotations
 
 import re
+import unicodedata
 from urllib.parse import urlsplit
 
 import phonenumbers
@@ -118,9 +119,19 @@ def normalize_postcode(pc: str | None) -> str | None:
     return m.group(1) if m else pc.replace(" ", "")
 
 
+def clean_url(url: str | None) -> str | None:
+    """Strip control, format, private-use and whitespace characters that scraped data sometimes carries
+    (live case: an OSM website tag of "http://<icon-font glyph>\nexample.com")."""
+    if not url:
+        return None
+    s = "".join(ch for ch in url if unicodedata.category(ch)[0] not in "CZ").strip()
+    return s or None
+
+
 def normalize(c: CompanyIn, default_region: str | None = "US") -> CompanyIn:
-    domain = c.domain or normalize_domain(c.website)
-    website = c.website if domain else None
+    site = clean_url(c.website)
+    domain = c.domain or normalize_domain(site)
+    website = site if domain else None
     return c.model_copy(
         update={
             "domain": domain,

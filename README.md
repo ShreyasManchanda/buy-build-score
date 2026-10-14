@@ -6,8 +6,8 @@ Buy & Build Score is a sourcing add-on for [SaaSquatch Leads](https://saasquatch
 
 ![Buy & Build Score: ranked leads with the evidence drawer open](docs/screenshot.jpg)
 
-- **Live demo:** `https://<your-vercel-app>.vercel.app/runs/demo` (no keys needed)
-- **API docs:** `https://<your-vercel-app>.vercel.app/api/v1/docs`
+- **Live demo:** https://buy-build-score.vercel.app/runs/demo (no keys needed)
+- **API docs:** https://buy-build-score.vercel.app/api/v1/docs
 
 ---
 
@@ -93,8 +93,9 @@ Three additive sub-scores, each 0–100, from observable signals only. Points ar
 
 | | Result |
 | --- | --- |
-| Tests | 142 API unit tests (11 hand-written SMB fixtures with expected evidence, scoring math, dedup, crawler/SSRF/robots, LLM guard, HubSpot payload, PageSpeed) + 6 Postgres integration tests (SSE order, persistence, replay, ranked list, CSV, demo, rate limit) + 11 vitest |
+| Tests | 146 API unit tests (11 hand-written SMB fixtures with expected evidence, scoring math, dedup, crawler/SSRF/robots, LLM guard, HubSpot payload, PageSpeed) + 6 Postgres integration tests (SSE order, persistence, replay, ranked list, CSV, demo, rate limit) + 11 vitest |
 | Demo run | Dental, Columbus OH: 60 discovered → 7 chains dropped → 59 scored in 163 s (from India against Neon in Ohio; Vercel in `cle1` is next door) |
+| Production, cold (Vercel `cle1` + Neon, Cleveland OH dentists, nothing cached) | 60 discovered → 59 scored in **57 s** server time; first leads within seconds |
 | Live auto-repair run | 20 discovered → 19 scored, done in 140 s; B-tier: Joe's Service Station (since 1948, family-owned), Brown's Alignment (1981, family-owned), C.A.R.S @ Polaris (1962) |
 | Tier-A precision | _TODO: hand-label 30 demo leads A/B/C and report agreement here._ |
 

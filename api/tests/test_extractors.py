@@ -126,6 +126,13 @@ def test_schema_person_needs_a_role_to_count_as_a_leader() -> None:
     assert founder["owner_name"].value == "Rod Yoder" and founder["owner_name"].extra["title"] == "founder"
 
 
+def test_departments_are_not_people() -> None:
+    """Live bug: "Provider Relations" (a corporate department) was credited as a chain's owner."""
+    html = "<p>Owner: Provider Relations. President - Human Resources. Contact Patient Support, Founder.</p>"
+    facts = run_all(Pages([PageView("https://x.com/", "home", html)]), current_year=2026)
+    assert facts["people_named"].value == [] and "owner_name" not in facts
+
+
 def test_people_regex_ignores_business_words() -> None:
     html = "<p>Owner: Columbus Heating Services. President - Ann Marie Walsh.</p>"
     facts = run_all(Pages([PageView("https://x.com/", "home", html)]), current_year=2026)

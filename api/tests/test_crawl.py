@@ -227,6 +227,26 @@ async def test_time_budget_keeps_pages_already_read(monkeypatch: pytest.MonkeyPa
     assert "time budget" in (res.error or "")
 
 
+async def test_unexpected_crawl_error_becomes_unreachable_not_a_crash(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Live bug: an exception that isn't an httpx.HTTPError dropped the company from the run."""
+
+    async def boom(self: Crawler, result: crawl.CrawlResult) -> crawl.CrawlResult:
+        raise ValueError("weird")
+
+    monkeypatch.setattr(Crawler, "_crawl", boom)
+    async with Crawler(per_host_interval=0) as c:
+        res = await c.crawl("https://anything.com/", use_cache=False)
+    assert res.status == "unreachable" and res.error == "ValueError" and res.pages == []
+
+
+async def test_website_with_control_characters_is_cleaned_before_crawling() -> None:
+    async with Crawler(per_host_interval=0) as c:
+        res = await c.crawl("\n", use_cache=False)
+    assert res.status == "no_site"
+
+
 @respx.mock
 async def test_slow_homepage_is_unreachable(monkeypatch: pytest.MonkeyPatch) -> None:
     import asyncio

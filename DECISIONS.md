@@ -128,12 +128,20 @@ The network blocked outbound port 5432 (Neon unreachable; port 443 fine), so thi
 - **Demo regenerated** with both fixes (same thesis, local DB): 0 bare-Person owners; 7 owners, all from the sites' own text. Gemini (503/timeouts) and Groq (free-tier rate limit) were both unavailable, so this demo has no LLM gap-fills — re-run `scripts/export_demo.py` on a fresh run once Groq's limit resets to restore owners like Fixari's.
 - **"N LLM calls" counted failed attempts**; it now counts successful answers only (demo counts corrected to 0).
 
+## Production deploy (2026-10-14)
+
+- **Deployed** to https://buy-build-score.vercel.app (Vercel Hobby, Services: `web` Next.js + `api` FastAPI, both in `cle1`, next to Neon `us-east-2`). Secrets (`DATABASE_URL`, `GEMINI_API_KEY`, `GROQ_API_KEY`) are Vercel *sensitive* env vars; `PUBLIC_APP_URL`/`ALLOWED_ORIGINS` set to the production URL.
+- **Measured on production, cold** (new city, nothing cached): 60 found → 59 scored in **57 s** server time (target ≤ 90 s ✅). SSE streams through Vercel unbuffered: first lead at ~8 s on a warm run.
+- **Found by that run and fixed:** (1) an OSM website tag of `http://<private-use glyph>\nexample.com` made the HTTP client raise a non-`HTTPError`, silently dropping the lead — URLs are cleaned at the source (`dedup.clean_url`) and any unexpected crawl exception now yields an "unreachable" lead; (2) "Provider Relations" (a chain's corporate department) was credited as owner — departmental/role words added to the not-a-name list. Re-run on production: 59/59 scored, the previously dropped practice ranks first.
+- **Region:** `"regions": ["cle1"]` in `vercel.json` (accepted in Services mode; build output confirms `[cle1]`).
+- **Deploy method:** `vercel deploy --prod` from the repo; Git integration (auto-deploy on push) needs the GitHub repo to be connected in the Vercel dashboard.
+
 ## SPEC acceptance criteria — status
 
 | Criterion | Status |
 | --- | --- |
 | Demo loads with no keys, ≥ 30 ranked leads | ✅ 59 leads, static from the CDN (`/runs/demo`); also loadable via `POST /runs/demo`. Note: 0 A / 5 B / 54 C — OSM dental data is thin (29 listings without a website) and A needs a rare combination of signals; auto repair (also tried) tops out at B 64. Thresholds were not tuned to manufacture an A. |
-| Live 60-business run ≤ 90 s, first row ≤ 10 s | ⚠️ Partly. From India against Neon (Ohio, ~0.3 s per DB round-trip): cold run 163 s (first row 85 s, dominated by busy public Overpass servers); with Overpass + crawls cached, 59 leads in 27–57 s with the first row at ~13 s. The < 90 s cold target depends on Overpass being responsive; still unmeasured on Vercel `cle1`. |
+| Live 60-business run ≤ 90 s, first row ≤ 10 s | ✅ on production (57 s cold, see above). Before that: ⚠️ Partly. From India against Neon (Ohio, ~0.3 s per DB round-trip): cold run 163 s (first row 85 s, dominated by busy public Overpass servers); with Overpass + crawls cached, 59 leads in 27–57 s with the first row at ~13 s. The < 90 s cold target depends on Overpass being responsive; still unmeasured on Vercel `cle1`. |
 | Every A-tier lead has ≥ 1 evidence item with a working source link per sub-score | ✅ by construction: every known signal (including 0-point ones) is an evidence row with a source URL (asserted in tests); A requires durability ≥ 30, so durability always has evidence. |
 | Slider re-ranks < 100 ms, no network | ✅ pure in-browser re-rank (`lib/score.ts`); vitest re-ranks 500 leads well under 100 ms. |
 | SaaSquatch CSV upload maps headers and scores rows | ✅ client preview + server mapping, tested (25-row file, 6 duplicates → 19). |

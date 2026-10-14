@@ -27,7 +27,7 @@ from selectolax.lexbor import LexborHTMLParser as HTMLParser
 
 from app import cache, net
 from app.config import get_settings
-from app.pipeline.dedup import normalize_domain
+from app.pipeline.dedup import clean_url, normalize_domain
 
 log = logging.getLogger(__name__)
 
@@ -305,6 +305,7 @@ class Crawler:
             await self.client.aclose()
 
     async def crawl(self, website: str | None, use_cache: bool = True) -> CrawlResult:
+        website = clean_url(website)
         domain = normalize_domain(website)
         if not website or not domain:
             return CrawlResult(domain=None, status="no_site", start_url=None)
@@ -319,15 +320,24 @@ class Crawler:
         async with self.sem:
             try:
                 await asyncio.wait_for(self._crawl(result), DOMAIN_BUDGET_S)
-            except TimeoutError:
+            except Exception as e:
+                # A slow subpage or anything unexpected (malformed URL, odd TLS/DNS error) must never drop the
+                # company: keep what was read, or record the business as unreachable. Cancellation is a
+                # BaseException and still propagates.
+                timed_out = isinstance(e, TimeoutError)
+                if not timed_out:
+                    log.warning("crawl of %s failed: %r", domain, e)
                 if result.home is not None:
-                    # The homepage was read; slow subpages shouldn't erase it. Score what we have.
                     result.status = "partial"
                     result.total_bytes = sum(p.bytes for p in result.pages)
-                    result.error = f"time budget hit after {len(result.pages)} page(s)"
+                    result.error = (
+                        f"time budget hit after {len(result.pages)} page(s)"
+                        if timed_out
+                        else f"stopped after {len(result.pages)} page(s): {type(e).__name__}"
+                    )
                 else:
                     result.status = "unreachable"
-                    result.error = "timeout"
+                    result.error = "timeout" if timed_out else type(e).__name__
         if result.status in ("ok", "partial", "blocked_robots"):
             await cache.set(key, result.to_cache(), cache.TTL["crawl"])
         return result
